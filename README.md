@@ -61,9 +61,9 @@ Follow the steps below in order to use the new jar of “Show Package Tool”:
 
 (BEFORE: Please backup all the original files to have an ability to rollback)  
 
-1.Copy `web_api_show_package-jar-with-dependencies.jar` from `jar` directory into `$MDS_FWDIR/api/samples/lib`  
-2.Copy `.template` files  from `templates` directory into `$MDS_FWDIR/api/samples/conf`  
-3.Copy `web_api_show_package.sh` from `script` directory into `$MDS_FWDIR/scripts/`  
+1. Copy `web_api_show_package-jar-with-dependencies.jar` from `jar` directory into `$MDS_FWDIR/api/samples/lib`  
+2. Copy `.template` files from `templates` directory into `$MDS_FWDIR/api/samples/conf`  
+3. Copy `web_api_show_package.sh` from `script` directory into `$MDS_FWDIR/scripts/`  
 
 ## Note
 
