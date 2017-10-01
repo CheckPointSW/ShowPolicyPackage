@@ -57,8 +57,7 @@ Follow the steps below in order to build 'show package tool' project:
 1. build 'java sdk':   
 * download directory `cp-mgmt-api-java-sdk-master` from [Check Point API Java SDK](https://github.com/CheckPoint-APIs-Team/cp-mgmt-api-java-sdk)   
 * run `mvn clean install`.    
-The target directory `cp-mgmt-api-java-sdk-master\mgmt_api_lib\target`   
-should now contain `mgmt_api_library_java-1.0.0.jar`.   
+The target directory `cp-mgmt-api-java-sdk-master\mgmt_api_lib\target` should now contain `mgmt_api_library_java-1.0.0.jar`.   
 2. build 'show package tool':      
 * download the 'show package tool' folder .     
 * run `mvn clean install`.   
