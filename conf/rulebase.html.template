@@ -1,0 +1,644 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Page Title</title>
+		<style>
+		body {
+			font-family: "Helvetica";
+		}
+
+		table {
+			border-collapse: collapse;
+			border : 1px solid gray;
+			font-size : 80%;
+		}
+
+		td {
+			vertical-align: text-top;
+			padding : 6px;
+			border : 1px solid gray;
+			white-space: nowrap;
+		}
+
+		th {
+			vertical-align: text-top;
+			padding : 6px;
+			border : 1px solid gray;
+			background-color: rgb(87,99,114);
+			font-weight : bold;
+			color : white;
+		}
+
+		.rule_number {
+			background-color: rgb(240,240,240);
+			text-align: right;
+		}
+
+		.placeholder_number {
+			background-color: rgb(226,240,254);
+			text-align: right;
+		}
+
+		.disabled_rule {
+			color: lightgray;
+		}
+
+		.disabled_rule .rule_number:after {
+			content: "\A[Disabled]";
+			display: block;
+		}
+
+		.negate:before {
+			content: "---Negated---\A";
+			display: block;
+			color: red;
+		}
+
+		.negate:after {
+			content: "------------------";
+			display: block;
+			color: red;
+		}
+
+		.section {
+			background-color: rgb(255,249,178);
+		}
+
+		.placeholder {
+			background-color: rgb(229,242,253);
+		}
+
+		.object_link {
+			text-decoration: none;
+			color: blue;
+		}
+
+		.object_link:hover {
+			text-decoration: underline;
+		}
+
+
+		.disabled_rule .object_link {
+			color: darkgray;
+		}
+
+		.toggle > .toggle-button {
+			margin-left: 5px;
+		}
+
+		.toggle:not(.open) > .toggle-content {
+		  display: none;
+		}
+
+		.toggle:not(.open) > .toggle-button:after {
+		  content: "+";
+		  color: blue;
+		}
+
+		.toggle.open > .toggle-button:after {
+		  content: "-";
+		  color: blue;
+		}
+
+		.toggle-button {
+		  cursor: pointer;
+		}
+
+       .failed{
+         color: red;
+       }
+
+       .empty{
+          color: blue;
+        }
+
+
+		</style>
+		<script>
+        <%%>
+			// end of dynamic content
+		</script>
+		<script>
+			var accessColumnHeaders = ["No.","Name", "Source", "Destination", "VPN", "Service/Application", getDataHeader(), "Action", "Track", "Time", "Install-On", "Comments"];
+			var natColumnHeaders = ["No.","Original Source", "Original Destination", "Original Services", "Translated Source", "Translated Destination", "Translated Services",  "Install-On", "Comments"];
+			var threatColumnHeaders = ["No.", "Name", "Protected Scope", "Source", "Destination", "Protection/Site", "Services", "Action","Track", "install-On", "Comments"];
+
+			var columnHeaders;
+			function getOptionalTextValue(elem, key) {
+				if (key in elem) return elem[key];
+				return "\u00A0"; // return non-breaking space
+			}
+
+			function drawSection(sectionObject, columns, parentRulePrefix) {
+				var tr = document.createElement("tr");
+				var td = document.createElement("td");
+				var td_text = "";
+				if ("name" in sectionObject) {
+					td_text = sectionObject["name"];
+				}
+				else {
+					td_text = "New Section";
+				}
+				td_text += " (" + parentRulePrefix + sectionObject["from"] +"-" + parentRulePrefix + sectionObject["to"] +")";
+				td.className = "section";
+				td.setAttribute("colSpan", columns.length);
+				td.appendChild(document.createTextNode(td_text));
+				tr.appendChild(td);
+				return tr;
+			}
+
+
+			function drawPlaceholder(placeholderObj) {
+				var tr = document.createElement("tr");
+				var td_number = document.createElement("td");
+				td_number.className = "placeholder_number";
+				td_number.appendChild(document.createTextNode(placeholderObj["rule-number"]));
+				var td_title = document.createElement("td");
+				var td_text = "Placeholder for domain rules";
+				td_title.className = "placeholder";
+				td_title.setAttribute("colSpan", accessColumnHeaders.length-1);
+				td_title.appendChild(document.createTextNode(td_text));
+				tr.appendChild(td_number);
+				tr.appendChild(td_title);
+				return tr;
+			}
+
+			function drawTextCell(fieldObject, key) {
+				var td = document.createElement("td");
+				td.appendChild(document.createTextNode(getOptionalTextValue(fieldObject, key)));
+				return td;
+			}
+
+			function drawItem(id, name, objectsPage) {
+				// TODO add more words
+				if (id == null)	{
+					name = "N/A";
+				}
+				var reservedWords = ["Any", "Policy Targets", "Accept", "Drop", "Reject","None", "Full Log", "Inner Layer","Network Log", "N/A"];
+				var divElem = document.createElement("div");
+
+
+				if (reservedWords.indexOf(name) >= 0  ) {
+					divElem.appendChild(document.createTextNode(name));
+				}
+				else {
+					var linkElem = document.createElement("a");
+					linkElem.className = "object_link";
+					linkElem.setAttribute("href", "./" + objectsPage + "?uid=" + id);
+					linkElem.setAttribute("target", "_blank");
+					linkElem.appendChild(document.createTextNode(name));
+					divElem.appendChild(linkElem);
+				}
+				return divElem;
+			}
+
+
+			function drawSingleValueCell(id) {
+				var td = document.createElement("td");
+				var obj_name = uid_to_name[id];
+				td.appendChild(drawItem(id, obj_name, rulebase.package+"_objects.html"));
+				return td;
+			}
+
+			function drawMultiValueCell(fieldObject, isNegated) {
+				var td = document.createElement("td");
+				if (isNegated) {
+					td.className = "negate";
+				}
+				fieldObject.forEach(function (obj_uid) {
+					var obj_name = uid_to_name[obj_uid];
+					td.appendChild(drawItem(obj_uid, obj_name, rulebase.package+"_objects.html"));
+				});
+				return td;
+			}
+
+			function drawSingleValueCell(id) {
+                var td = document.createElement("td");
+                var obj_name = uid_to_name[id];
+                td.appendChild(drawItem(id, obj_name, rulebase.package+"_objects.html"));
+                return td;
+            }
+
+            function drawMultiValueCell(fieldObject, isNegated) {
+                var td = document.createElement("td");
+                if (isNegated) {
+                    td.className = "negate";
+                }
+                fieldObject.forEach(function (obj_uid) {
+                    var obj_name = uid_to_name[obj_uid];
+                    td.appendChild(drawItem(obj_uid, obj_name, rulebase.package+"_objects.html"));
+                });
+                return td;
+            }
+
+             function drawTrackValueCell(object){
+                   var td = document.createElement("td");
+                   if (isApiVersionNew() && object["track"]){
+                       var setting = object["track"];
+                       var obj_name = uid_to_name[setting["type"]];
+                       var item = drawItem(setting["type"], obj_name, rulebase.package+"_objects.html");
+                       td.appendChild(item);
+
+                       if (setting["per-session"]  || setting["per-connection"] || setting["accounting"] || setting["alert"] != "none"){
+                           item.className = "toggle";
+                           var button = document.createElement("span");
+                           button.className = "toggle-button";
+
+                           item.appendChild(button);
+
+                           var content = document.createElement("div");
+                           content.className = "toggle-content";
+                           item.appendChild(content);
+
+                           if (setting["per-session"]){
+                               var newEl = document.createElement("div");
+                               newEl.appendChild(document.createTextNode("per-session"));
+                               content.appendChild(newEl);
+                           }
+                            if (setting["per-connection"]){
+                               var newEl = document.createElement("div");
+                               newEl.appendChild(document.createTextNode("per-connection"));
+                               content.appendChild(newEl);
+                           }
+                            if (setting["accounting"]){
+                               var newEl = document.createElement("div");
+                               newEl.appendChild(document.createTextNode("accounting"));
+                               content.appendChild(newEl);
+                           }
+                           if (setting["alert"] != "none"){
+                               var newEl = document.createElement("div");
+                               newEl.appendChild(document.createTextNode(setting["alert"]));
+                               content.appendChild(newEl);
+                           }
+
+                       }
+                   }
+                   else{
+                       var obj_name = uid_to_name[object["track"]];
+                       var item = drawItem(object["track"], obj_name, rulebase.package+"_objects.html");
+                       td.appendChild(item);
+                       if (object["track-alert"] && object["track-alert"] != "none"){
+                           item.className = "toggle";
+                           var button = document.createElement("span");
+                           button.className = "toggle-button";
+
+                           item.appendChild(button);
+
+                           var content = document.createElement("div");
+                           content.className = "toggle-content";
+                           item.appendChild(content);
+
+                           var newEl = document.createElement("div");
+                           newEl.appendChild(document.createTextNode(object["track-alert"]));
+                           content.appendChild(newEl);
+                       }
+                   }
+                   return td;
+             }
+
+			function isApiVersionNew(){
+				return rulebase["api-version"] != "null" && rulebase["api-version"] != "1";
+			}
+
+			function drawNatRule(ruleObject) {
+				var tr = document.createElement("tr");
+				if (!ruleObject.enabled) {
+					tr.className = "disabled_rule";
+				}
+				var td_number = document.createElement("td");
+				td_number.className = "rule_number";
+				td_number.appendChild(document.createTextNode(ruleObject["rule-number"]));
+
+				tr.appendChild(td_number);
+				tr.appendChild(drawSingleValueCell(ruleObject["original-source"]));
+				tr.appendChild(drawSingleValueCell(ruleObject["original-destination"]));
+				tr.appendChild(drawSingleValueCell(ruleObject["original-service"]));
+
+				tr.appendChild(drawSingleValueCell(ruleObject["translated-source"]));
+				tr.appendChild(drawSingleValueCell(ruleObject["translated-destination"]));
+				tr.appendChild(drawSingleValueCell(ruleObject["translated-service"]));
+
+				tr.appendChild(drawMultiValueCell(ruleObject["install-on"], false));
+				tr.appendChild(drawTextCell(ruleObject, "comments"));
+				return tr;
+
+			}
+
+			function drawAccessRule(ruleObject) {
+				var tr = document.createElement("tr");
+				if (!ruleObject.enabled) {
+					tr.className = "disabled_rule";
+				}
+				var td_number = document.createElement("td");
+				td_number.className = "rule_number";
+				td_number.appendChild(document.createTextNode(ruleObject["rule-number"]));
+
+				var td_action = document.createElement("td");
+				if (uid_to_name[ruleObject["action"]] == "Inner Layer") {
+
+                    var innerLayerName = document.createTextNode("Layer: " + uid_to_name[ruleObject["inline-layer"]]);
+
+                    //Inline layer file name should exist
+				    if ( inline_layer_uid_to_file_name[ruleObject["inline-layer"]] ) {
+				        var linkElem = document.createElement("a");
+                        linkElem.className = "object_link";
+                        linkElem.setAttribute("href", "./" + inline_layer_uid_to_file_name[ruleObject["inline-layer"]]);
+                        linkElem.setAttribute("target", "_blank");
+                        linkElem.appendChild(innerLayerName);
+                        td_action.appendChild(linkElem);
+				    }
+				    else {
+				        td_action.appendChild(innerLayerName);
+				    }
+				}
+				else {
+					td_action = drawSingleValueCell(ruleObject["action"]);
+				}
+
+				var td_data = document.createElement("td");
+				if (uid_to_name[getData(ruleObject)[0]] == "Any") {
+					td_data.appendChild(document.createTextNode("Any"));
+				}
+				else
+				{
+					td_data = drawMultiValueCell(getData(ruleObject), getDataNegate(ruleObject));
+					var dataDirectionText = "(Any direction)";
+					if (getDataDirection(ruleObject)=="up") { dataDirectionText = "(Upload Traffic)";}
+					if (getDataDirection(ruleObject)=="down") { dataDirectionText = "(Download Traffic)";}
+					td_data.appendChild(document.createTextNode(dataDirectionText));
+				}
+				tr.appendChild(td_number);
+				tr.appendChild(drawTextCell(ruleObject, "name"));
+				tr.appendChild(drawMultiValueCell(ruleObject["source"], ruleObject["source-negate"]));
+				tr.appendChild(drawMultiValueCell(ruleObject["destination"], ruleObject["destination-negate"]));
+				tr.appendChild(drawMultiValueCell(ruleObject["vpn"], false));
+				tr.appendChild(drawMultiValueCell(ruleObject["service"], ruleObject["service-negate"]));
+				tr.appendChild(td_data);
+				//tr.appendChild(drawMultiValueCell(getData(ruleObject), getDataNegate(ruleObject)));
+				tr.appendChild(td_action);
+				tr.appendChild(drawTrackValueCell(ruleObject));
+				tr.appendChild(drawMultiValueCell(ruleObject["time"], false));
+				tr.appendChild(drawMultiValueCell(ruleObject["install-on"], false));
+				tr.appendChild(drawTextCell(ruleObject, "comments"));
+				return tr;
+			}
+
+			function drawThreatRule(ruleObject) {
+				var tr = document.createElement("tr");
+				if (!ruleObject.enabled) {
+					tr.className = "disabled_rule";
+				}
+
+				var td_number = document.createElement("td");
+				td_number.className = "rule_number";
+				td_number.setAttribute("colSpan", 1);
+				td_number.appendChild(document.createTextNode(ruleObject["rule-number"]));
+
+				tr.appendChild(td_number);
+				tr.appendChild(drawTextCell(ruleObject, "name"));
+				tr.appendChild(drawMultiValueCell(ruleObject["protected-scope"], ruleObject["protected-scope-negate"]));
+				tr.appendChild(drawMultiValueCell(ruleObject["source"], ruleObject["source-negate"]));
+				tr.appendChild(drawMultiValueCell(ruleObject["destination"], ruleObject["destination-negate"]));
+				tr.appendChild(drawSingleValueCell(ruleObject["protection-or-site"]));
+				tr.appendChild(drawMultiValueCell(ruleObject["service"], ruleObject["service-negate"]));
+				tr.appendChild(drawSingleValueCell(ruleObject["action"]));
+				tr.appendChild(drawSingleValueCell(ruleObject["track"]));
+				tr.appendChild(drawMultiValueCell(ruleObject["install-on"], false));
+				tr.appendChild(drawTextCell(ruleObject, "comments"));
+				return tr;
+
+			}
+
+			function drawThreatException(ruleObject, lastRuleNumber, lastRuleEnabled) {
+				var tr = document.createElement("tr");
+				if (!ruleObject.enabled || !lastRuleEnabled) {
+					tr.className = "disabled_rule";
+				}
+
+				var td_number = document.createElement("td");
+				td_number.className = "rule_number";
+				td_number.appendChild(document.createTextNode("E" + lastRuleNumber + "." + ruleObject["exception-number"]));
+
+
+				tr.appendChild(td_number);
+				tr.appendChild(drawTextCell(ruleObject, "name"));
+				tr.appendChild(drawMultiValueCell(ruleObject["protected-scope"], ruleObject["protected-scope-negate"]));
+				tr.appendChild(drawMultiValueCell(ruleObject["source"], ruleObject["source-negate"]));
+				tr.appendChild(drawMultiValueCell(ruleObject["destination"], ruleObject["destination-negate"]));
+				tr.appendChild(drawMultiValueCell(ruleObject["protection-or-site"], false));
+				tr.appendChild(drawMultiValueCell(ruleObject["service"], ruleObject["service-negate"]));
+				tr.appendChild(drawSingleValueCell(ruleObject["action"]));
+				tr.appendChild(drawSingleValueCell(ruleObject["track"]));
+				tr.appendChild(drawMultiValueCell(ruleObject["install-on"], false));
+				tr.appendChild(drawTextCell(ruleObject, "comments"));
+				return tr;
+			}
+
+			function drawRulebaseColumnHeaders(columns) {
+
+                var headerRow = document.getElementById("rulebase_header_row");
+                columns.forEach(function(entry){
+                    var th = document.createElement("th");
+                    th.appendChild(document.createTextNode(entry));
+                    headerRow.appendChild(th);
+                });
+
+			}
+
+			function drawRulebase() {
+
+			    if (failed_creating_layer){
+
+                     document.getElementById("domain").innerHTML = "Domain: "+ rulebase.domain;
+                     if (rulebase.layer != "IPS") {
+                         document.getElementById("package").innerHTML = "Package: "+ rulebase.package;
+                     }
+                     else {
+                         document.getElementById("package").innerHTML = "Package: "+ "Shared across all policy packages";
+                     }
+                      if (rulebase.type == "access") {
+                             document.getElementById("layer").innerHTML = "Layer: "+ rulebase.layer + " (" + rulebase.type + " layer)";
+                             document.title = rulebase.layer;
+                      }
+                       if (rulebase.type == "nat") {
+                              document.getElementById("layer").innerHTML = "NAT rulebase";
+                              document.title = "NAT";
+                       }
+                       if (rulebase.type == "threat-prevention") {
+                           document.getElementById("layer").innerHTML = "Layer: "+ rulebase.layer + " (" + rulebase.type + " layer)";
+                           document.title = rulebase.layer;
+                       }
+                       var message = document.getElementById("message");
+                       message.className = "failed";
+                       message.innerText = "Failed to create layer. For more information, please refer to the log file in the output tar file." ;
+
+                }
+                else{
+                    // add page titles
+                    document.getElementById("domain").innerHTML = "Domain: "+ rulebase.domain;
+                    if (rulebase.layer != "IPS") {
+                        document.getElementById("package").innerHTML = "Package: "+ rulebase.package;
+                    }
+                    else {
+                        document.getElementById("package").innerHTML = "Package: "+ "Shared across all policy packages";
+                    }
+
+                    if (rulebase.type == "access") {
+                        document.getElementById("layer").innerHTML = "Layer: "+ rulebase.layer + " (" + rulebase.type + " layer)";
+                        document.title = rulebase.layer;
+
+                        drawRulebaseColumnHeaders(accessColumnHeaders);
+                        // create rules and sections
+                        var tableBody = document.getElementById("rulebase_table_body");
+                        if (data.length == 0){
+                             var message = document.getElementById("message");
+                             message.className = "empty";
+                             message.innerText = "No rules found in this layer.";
+                        }
+                        data.forEach(function(entry){
+                        if (entry.type == "access-section") {
+                            tableBody.appendChild(drawSection(entry,accessColumnHeaders, ""));
+                            }
+                        if (entry.type == "access-rule") {
+                                tableBody.appendChild(drawAccessRule(entry));
+                            }
+                            if (entry.type == "place-holder") {
+                                tableBody.appendChild(drawPlaceholder(entry));
+                            }
+                        });
+                    }
+
+                    if (rulebase.type == "nat") {
+                        document.getElementById("layer").innerHTML = "NAT rulebase";
+                        document.title = "NAT";
+
+                        drawRulebaseColumnHeaders(natColumnHeaders);
+                        // create rules and sections
+                        var tableBody = document.getElementById("rulebase_table_body");
+                        if (data.length == 0){
+                             var message = document.getElementById("message");
+                             message.className = "empty";
+                             message.innerText = "No rules found in this layer.";
+                        }
+                        data.forEach(function(entry){
+                            if (entry.type == "nat-section") {
+                                tableBody.appendChild(drawSection(entry,natColumnHeaders, ""));
+                            }
+                            if (entry.type == "nat-rule") {
+                                tableBody.appendChild(drawNatRule(entry));
+                            }
+                            if (entry.type == "place-holder") {
+                                tableBody.appendChild(drawPlaceholder(entry));
+                            }
+                        });
+                    }
+
+                    if (rulebase.type == "threat-prevention") {
+
+                        document.getElementById("layer").innerHTML = "Layer: "+ rulebase.layer + " (" + rulebase.type + " layer)";
+                        document.title = rulebase.layer;
+
+                        drawRulebaseColumnHeaders(threatColumnHeaders);
+                        // create rules and sections
+                        var tableBody = document.getElementById("rulebase_table_body");
+                        var lastRuleNumber;
+                        var lastRuleEnabled;
+                        if (data.length == 0){
+                             var message = document.getElementById("message");
+                             message.className = "empty";
+                              message.innerText = "No rules found in this layer.";
+                        }
+                        data.forEach(function(entry){
+
+                            if (entry.type == "threat-section") {
+                                tableBody.appendChild(drawSection(entry,threatColumnHeaders, "E" + lastRuleNumber + "."));
+                            }
+
+                            if (entry.type == "threat-rule") {
+                                tableBody.appendChild(drawThreatRule(entry));
+                                lastRuleNumber = entry["rule-number"];
+                                lastRuleEnabled = entry["enabled"];
+                            }
+
+                            if (entry.type == "threat-exception") {
+                                tableBody.appendChild(drawThreatException(entry, lastRuleNumber, lastRuleEnabled));
+                            }
+
+                            //TODO?
+                            if (entry.type == "place-holder") {
+                                tableBody.appendChild(drawPlaceholder(entry));
+                            }
+                        });
+                    }
+                    trackButton();
+				}
+			}
+
+			function trackButton(){
+
+				document.getElementById("rulebase_table_body").addEventListener('click', function(e){
+					var node = e.target;
+
+					while (node != this) {
+					  if (~node.className.split(' ').indexOf("toggle-button")) {
+						toggleClass(node.parentNode, "open");
+						e.stopPropagation();
+						return;
+					  }
+					  node = node.parentNode;
+					}
+				});
+			}
+
+			function toggleClass(elt, cls) {
+                if (!elt) return;
+
+                var classArr = (elt.className || "").split(" ");
+                var classIndex = classArr.indexOf(cls);
+                if (~classIndex) {
+                                classArr[classIndex] = null;
+                } else {
+                                classArr.push(cls);
+                }
+
+                elt.className = classArr.join(" ").replace(/\s{2,}/g, ' ').replace(/^\s+|\s+$/g, '');
+            }
+
+            function getDataHeader()
+            {
+                return isApiVersionNew() ? "Content" : "Data";
+            }
+
+            function getData(ruleObj) {
+                return ruleObj['data'] || ruleObj['content'];
+            }
+
+            function getDataDirection(ruleObj) {
+                return ruleObj['data-direction'] || ruleObj['content-direction'];
+            }
+
+            function getDataNegate(ruleObj) {
+                return ruleObj['data-negate'] || ruleObj['content-negate'];
+            }
+		</script>
+
+
+	</head>
+	<body onload="drawRulebase()">
+	  <h3>
+	     <div id="domain"></div>
+		 <div id="package"></div>
+		 <div id="layer"></div>
+		 <div id="message"></div>
+	  </h3>
+	  <table>
+		<thead>
+		  <tr id="rulebase_header_row">
+		  <tr>
+		</thead>
+		<tbody id="rulebase_table_body">
+		</tbody>
+	  </table>
+	</body
+</html>
