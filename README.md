@@ -63,4 +63,5 @@
 
 ## Note
 
-    This tool is already installed on Check Point Security Management servers running version R80 with Jumbo-HF and above.
+    This tool is already installed on Check Point Security Management servers running
+    version R80 with Jumbo-HF and above.
