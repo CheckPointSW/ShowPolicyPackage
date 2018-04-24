@@ -85,7 +85,7 @@ public class ShowPackageTool {
             configuration.initializeParameters(args);
         }
         catch (Exception e) {
-            logoutReportAndExit(e.getMessage(), MessageType.SEVERE, false);
+            logoutReportAndExit(e.getMessage() != null ? e.getMessage() : e.getClass().getName(), MessageType.SEVERE, false);
         }
 
         /*Prepare Api client settings*/
