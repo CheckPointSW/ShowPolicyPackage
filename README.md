@@ -16,23 +16,25 @@ lists all the available items to display.
 
 ## Usage Syntax
 
-```$MDS_FWDIR/scripts/web_api_show_package.sh [-d domain-name] [-k package-name] [-n port-number] [-t path] [-o path]```
+To use the tool you have to obtain `web_api_show_package-jar-with-dependencies.jar` artifact by downloading from the **Releases** tab or by building it from the sources (see **Build Instructions** below).
+
+Then you run:
+
+```java -jar web_api_show_package-jar-with-dependencies.jar [-d domain-name] [-k package-name] [-v] [-n port-number] [-o path]```
       
 Where:
 
 • [-d domain-name] (Optional): The name or uid of the Security Management Server domain.  
 When running the command on a Multi domain server the default domain is the "MDS".
 
+• [-v] (Optional): List the existing policy packages.
+
 • [-k package-name] (Optional): The package name or the uid of the policy package to show.  
 When a package-name is not provided, the tool will provide details on all the policy-packages  
-that are being used (the ones that were installed on the security gateways)  
+that are being used (the ones that were installed on the security gateways).
 
 • [-n port-number] (Optional): The port of WebAPI server on Security Management Server.  
 Default value is 443.
-
-• [-t path] (Optional): The tool uses template files to create HTML pages out of JSON data.  
-This parameter points to the location of these files.  
-Default location is $MDS_FWDIR/api/samples/conf/.  
 
 • [-o path] (Optional): The output path. The location in which to save the resulting .tar.gz file.  
 The parameter can also be the full path (including the .tar.gz filename).   
@@ -42,17 +44,20 @@ Use "-h" option in order to see the full list of options to configure the tool
 
 ## Examples
 • Running the tool on a Security Management server:  
-`$MDS_FWDIR/scripts/web_api_show_package.sh`  
+`java -jar web_api_show_package-jar-with-dependencies.jar`  
 
 • Running the tool on a Security Management server for a specific policy package:  
-`$MDS_FWDIR/scripts/web_api_show_package.sh -k <PACKAGE NAME>`  
+`java -jar web_api_show_package-jar-with-dependencies.jar -k <PACKAGE NAME>`  
 
 • Running the tool on a Multi-Domain Server for specific domain and a specific policy package:  
-`$MDS_FWDIR/scripts/web_api_show_package.sh -k <PACKAGE NAME> -d <DOMAIN NAME>`  
+`java -jar web_api_show_package-jar-with-dependencies.jar -k <PACKAGE NAME> -d <DOMAIN NAME>`  
   
-## Instructions
+• Running the tool on a side server to list the policy packages from the Security Management server running on 198.51.100.5:  
+`java -jar web_api_show_package-jar-with-dependencies.jar -m 198.51.100.5 -v`
 
-Follow the steps below in order to build “Show Package Tool” project:   
+## Build Instructions
+
+Follow the steps below in order to build "Show Package Tool" project:   
   
 1. build 'java sdk':   
 * download directory `cp-mgmt-api-java-sdk-master` from [Check Point API Java SDK](https://github.com/CheckPoint-APIs-Team/cp-mgmt-api-java-sdk)   
@@ -63,15 +68,14 @@ The target directory `cp-mgmt-api-java-sdk-master\mgmt_api_lib\target` should no
 * run `mvn clean install`.   
 The target directory should now contain `web_api_show_package-jar-with-dependencies.jar`.     
    
-Follow the steps below in order to use the new jar of “Show Package Tool”:    
+Follow the steps below in order to use the new jar of "Show Package Tool" on your Check Point Security Management server:    
   
 (BEFORE: Please backup all the original files to have an ability to rollback)  
   
-1. Copy `web_api_show_package-jar-with-dependencies.jar` from `target` directory into `$MDS_FWDIR/api/samples/lib`  
-2. Copy `.template` files from `templates` directory into `$MDS_FWDIR/api/samples/conf`  
-3. Copy `web_api_show_package.sh` from `script` directory into `$MDS_FWDIR/scripts/`  
+1. Copy `web_api_show_package-jar-with-dependencies.jar` from `target` directory into `$MDS_FWDIR/api/samples/lib`   
+2. Copy `web_api_show_package.sh` from `script` directory into `$MDS_FWDIR/scripts/` 
 
 ## Note
 
-This tool is already installed on Check Point Security Management servers running  
-version R80 with Jumbo-HF and above.  
+This tool is already installed on Check Point Security Management servers running version R80 with Jumbo-HF and above.
+The Check Point Management Server also has a wrapper script so the tool can be run as `$MDS_FWDIR/scripts/web_api_show_package.sh` which in turn executes `java -jar $MDS_FWDIR/api/samples/lib/web_api_show_package-jar-with-dependencies.jar` 
