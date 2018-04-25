@@ -248,32 +248,18 @@ public enum HtmlUtils {
      */
     private void setDataInHtmlFile(PrintStream htmlFile, FileDetails details) throws IOException
     {
-        htmlFile.print("\t\tvar data = [");
+        htmlFile.print("\t\tvar data = ");
         try(FileInputStream reader = new FileInputStream(details.getObjectsFileName());
             PrintStream jsonWriter = new PrintStream(new File(details.getJsonFileName()))) {
-            byte[] buffer = new byte[BUFFER_SIZE];
 
-            //In order to remove the first comma
-            int resRead = reader.read(buffer);
             //If the temp file is empty return
-            if (resRead == -1){
+            if (reader.available() == 0){
                 return;
             }
-            //First time skip the first byte, the comma - ","
-            else if (resRead < BUFFER_SIZE){
-                //The temp file contain less bytes the the buffer size
-                htmlFile.write(Arrays.copyOfRange(buffer,1,resRead));
-                jsonWriter.write(Arrays.copyOfRange(buffer,1,resRead));
-                htmlFile.flush();
-                jsonWriter.flush();
-            }else{
-                htmlFile.write(Arrays.copyOfRange(buffer,1,BUFFER_SIZE));
-                jsonWriter.write(Arrays.copyOfRange(buffer,1,BUFFER_SIZE));
-                htmlFile.flush();
-                jsonWriter.flush();
-            }
 
-            //Read from temp file until get to EOF and write the info to the html file an json file.
+            //Read from temp file until get to EOF and write the info to the html file and json file.
+            int resRead;
+            byte[] buffer = new byte[BUFFER_SIZE];
             while((resRead = reader.read(buffer)) != -1)
             {
                 if (resRead < BUFFER_SIZE){
@@ -290,7 +276,7 @@ public enum HtmlUtils {
         }
         finally {
             //Close the list
-            htmlFile.println("];");
+            htmlFile.println(";");
             //Delete the info from the temp file
             try(PrintWriter writer = new PrintWriter(details.getObjectsFileName())) {
                 writer.print("");

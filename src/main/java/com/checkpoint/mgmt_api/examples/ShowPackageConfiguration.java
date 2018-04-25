@@ -27,7 +27,7 @@ enum ShowPackageConfiguration {
 
     INSTANCE;
 
-    private static final String TOOL_VERSION     = "v1.2.0";
+    private static final String TOOL_VERSION     = "v1.2.1";
     private static final String TAR_SUFFIX       = ".tar.gz";
     private static final String LOG_SUFFIX       = ".elg";
     private static final String PREFIX           = "show_package-";
@@ -142,9 +142,14 @@ enum ShowPackageConfiguration {
         //Open write access to the temp file of the objects
       objectsWriter = new RandomAccessFile(new File(resultFolderPath + System.getProperty("file.separator") +
                                                                 OBJECTS_FILE), "rw");
+
+      objectsWriter.writeBytes("[");
+
         //Open write access to the temp file of the rulebase
       rulbaseWriter = new RandomAccessFile(new File(resultFolderPath + System.getProperty("file.separator") +
                                                                 RULEBASE_FILE), "rw");
+
+      rulbaseWriter.writeBytes("[");
     }
 
     /**
