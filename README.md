@@ -16,7 +16,7 @@ lists all the available items to display.
 
 ## Usage Syntax
 
-To use the tool you have to obtain `web_api_show_package-jar-with-dependencies.jar` artifact by downloading from the **Releases** tab or by building it from the sources (see **Build Instructions** below).
+To use the tool you have to obtain `web_api_show_package-jar-with-dependencies.jar` artifact by downloading it from the **Releases** tab or by building it from the sources (see **Build Instructions** below).
 
 Then you run:
 
