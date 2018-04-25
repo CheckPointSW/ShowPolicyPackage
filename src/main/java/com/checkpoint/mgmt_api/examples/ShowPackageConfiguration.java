@@ -27,7 +27,7 @@ enum ShowPackageConfiguration {
 
     INSTANCE;
 
-    private static final String TOOL_VERSION     = "v1.2.1";
+    private static final String TOOL_VERSION     = "v1.2.2";
     private static final String TAR_SUFFIX       = ".tar.gz";
     private static final String LOG_SUFFIX       = ".elg";
     private static final String PREFIX           = "show_package-";
@@ -42,7 +42,7 @@ enum ShowPackageConfiguration {
     private static final String logFileName;
 
     static {
-        SimpleDateFormat formatDate = new SimpleDateFormat("YYYY-MM-dd_hh-mm-ss");
+        SimpleDateFormat formatDate = new SimpleDateFormat("YYYY-MM-dd_HH-mm-ss");
         String date  = formatDate.format(new Date());
         tarName      = PREFIX + date + TAR_SUFFIX;
         logFileName  = PREFIX + date + LOG_SUFFIX;
