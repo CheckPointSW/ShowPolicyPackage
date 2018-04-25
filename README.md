@@ -78,4 +78,5 @@ Follow the steps below in order to use the new jar of "Show Package Tool" on you
 ## Note
 
 This tool is already installed on Check Point Security Management servers running version R80 with Jumbo-HF and above.
+
 The Check Point Management Server also has a wrapper script so the tool can be run as `$MDS_FWDIR/scripts/web_api_show_package.sh` which in turn executes `java -jar $MDS_FWDIR/api/samples/lib/web_api_show_package-jar-with-dependencies.jar` 
