@@ -4,16 +4,20 @@ import com.checkpoint.mgmt_api.client.ApiClient;
 import com.checkpoint.mgmt_api.objects.GatewayAndServer;
 import com.checkpoint.mgmt_api.utils.HtmlUtils;
 import org.json.simple.JSONObject;
-import java.io.*;
+
+import java.io.Console;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
-import java.util.*;
 
 /**
  * This class holds all the configuration parameters.
@@ -23,12 +27,10 @@ enum ShowPackageConfiguration {
 
     INSTANCE;
 
-    private static final String TOOL_VERSION     = "v1.1.6";
-    private static final String TEMPLATES_PATH   = "/api/samples/conf/";
+    private static final String TOOL_VERSION     = "v1.2.0";
     private static final String TAR_SUFFIX       = ".tar.gz";
     private static final String LOG_SUFFIX       = ".elg";
     private static final String PREFIX           = "show_package-";
-    private static final String ENVIRONMENT      = "MDS_FWDIR";
     //Temp file Names for the data
     private static final String OBJECTS_FILE     = "objects.txt";
     private static final String RULEBASE_FILE    = "rulebase.txt";
@@ -104,39 +106,31 @@ enum ShowPackageConfiguration {
      */
     void setTemplatePath() throws Exception {
 
-        String directory = new File("").getAbsolutePath();
-        //Default path for template folder
-        String mdsFwdir = System.getenv(ENVIRONMENT);
-        if(mdsFwdir != null && !mdsFwdir.isEmpty()){
-            Path path = Paths.get(mdsFwdir + TEMPLATES_PATH);
-            if (Files.exists(path)) {
-                directory = path.toString();
+        if (templateDirectory != null && !templateDirectory.isEmpty()) {
+
+            Path templateDirectoryPath = Paths.get(templateDirectory);
+
+            if (!Files.exists(templateDirectoryPath)) {
+                String errorMessage = "Provided template directory [" + templateDirectoryPath.toString() + "] does not exist!";
+                System.out.println(errorMessage);
+                throw new Exception(errorMessage);
             }
-        }
 
-        //If the path passed as an argument and the folder exist.
-        if(templateDirectory != null && !templateDirectory.isEmpty()) {
-            Path path = Paths.get(templateDirectory);
-            if (Files.exists(path)) {
-                directory = path.toString();
+            // Check if the templates exists in the templates directory
+            if (!Files.exists(templateDirectoryPath.resolve(HtmlUtils.RULEBASE_HTML_TEMPLATE )) ||
+                    !Files.exists(templateDirectoryPath.resolve(HtmlUtils.INDEX_HTML_TEMPLATE )) ||
+                    !Files.exists(templateDirectoryPath.resolve(HtmlUtils.OBJECTS_HTML_TEMPLATE ))){
+                String errorMessage = "Template files: " + HtmlUtils.RULEBASE_HTML_TEMPLATE + ", " +
+                        HtmlUtils.INDEX_HTML_TEMPLATE + " and " + HtmlUtils.OBJECTS_HTML_TEMPLATE +
+                        " were not found in the directory: '" + templateDirectoryPath.toString() +"'.";
+                System.out.println(errorMessage);
+                throw new Exception(errorMessage);
             }
+
+            htmlUtil.readTemplatesFromCustomDirectory(templateDirectoryPath);
+        } else {
+            htmlUtil.readTemplatesFromClassPath();
         }
-
-        // Check if the templates exists in the templates directory
-        if (!Files.exists(Paths.get(directory, HtmlUtils.RULEBASE_HTML_TEMPLATE )) ||
-                !Files.exists(Paths.get(directory, HtmlUtils.INDEX_HTML_TEMPLATE )) ||
-                !Files.exists(Paths.get(directory, HtmlUtils.OBJECTS_HTML_TEMPLATE ))){
-            String errorMessage = "Template files: "+ HtmlUtils.RULEBASE_HTML_TEMPLATE + ", " +
-                    HtmlUtils.INDEX_HTML_TEMPLATE + " and " +HtmlUtils.OBJECTS_HTML_TEMPLATE + " were not found in the " +
-                    "directory: '" + directory +"'. \nYou can specify a custom directory with '-t' flag.";
-            System.out.println(errorMessage);
-            throw new Exception(errorMessage);
-        }
-
-        templateDirectory = directory;
-        htmlUtil.setTemplateDirectory(templateDirectory);
-
-        logger.debug("Template file's directory: " + templateDirectory);
     }
 
     /**
@@ -280,7 +274,7 @@ enum ShowPackageConfiguration {
     /**
      * This function configures the logger with handler and formatter
      */
-    private void configureLogFile(String debugString) throws IOException
+    private void configureLogFile(String debugString)
     {
         //Set log file's name
         String logFile = resultFolderPath + System.getProperty("file.separator") + logFileName;
@@ -782,8 +776,7 @@ enum ShowPackageConfiguration {
             void flagToString()
             {
                 System.out.println(
-                        "\tTemplate Path.\n\tPath where the template files are stored.\n\tThe default location is " +
-                                "$MDS_FWDIR/api/samples/conf/.");
+                        "\tCustom Template Path.\n\tPath where the custom templates are stored.\n\tThe default templates are bundled into the jar.");
             }
             String debugString()
             {

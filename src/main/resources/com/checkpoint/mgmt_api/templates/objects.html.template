@@ -197,5 +197,5 @@
 	
 	<body onload="printAllObjects()">
 
-	</body
+	</body>
 </html>

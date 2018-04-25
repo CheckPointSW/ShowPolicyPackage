@@ -7,7 +7,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -72,19 +72,19 @@ public enum HtmlUtils {
         //The temp file contains the json objects
         private String objectsFileName;
 
-        private String templateName;
+        private List<String> templateLines;
         private String htmlFileName;
         private String jsonFileName;
 
 
-        FileDetails(String objectsFileName, String templateName, String htmlFileName, String jsonFileName){
-            this(objectsFileName, templateName, htmlFileName, jsonFileName, null, null);
+        FileDetails(String objectsFileName, List<String> templateLines, String htmlFileName, String jsonFileName){
+            this(objectsFileName, templateLines, htmlFileName, jsonFileName, null, null);
         }
 
-        FileDetails(String objectsFileName, String templateName, String htmlFileName,String jsonFileName,
+        FileDetails(String objectsFileName, List<String> templateLines, String htmlFileName,String jsonFileName,
                     Map<String,String> uidToName, RulebaseData rulebaseData){
             this.objectsFileName = objectsFileName;
-            this.templateName = templateName;
+            this.templateLines = templateLines;
             this.uidToName = uidToName;
             this.rulebaseData = rulebaseData;
             this.htmlFileName = htmlFileName;
@@ -93,9 +93,9 @@ public enum HtmlUtils {
 
         }
 
-        String getTemplateName()
+        List<String> getTemplateLines()
         {
-            return templateName;
+            return templateLines;
         }
 
         public String getHtmlFileName()
@@ -127,10 +127,15 @@ public enum HtmlUtils {
 
     //========================================//
 
+    //Template namespace
+    public static final String TEMPLATES_NAMESPACE = "com/checkpoint/mgmt_api/templates";
+
     //Template file names
     public static final String RULEBASE_HTML_TEMPLATE = "rulebase.html.template";
     public static final String OBJECTS_HTML_TEMPLATE  = "objects.html.template";
     public static final String INDEX_HTML_TEMPLATE    = "index.html.template";
+
+    public static final String[] ALL_TEMPLATES = new String[]{INDEX_HTML_TEMPLATE, OBJECTS_HTML_TEMPLATE, RULEBASE_HTML_TEMPLATE};
 
     //Temp file that holds the objects info
     private static final String OBJECTS_FILE  = "objects.txt";
@@ -150,7 +155,7 @@ public enum HtmlUtils {
     private static final int BUFFER_SIZE = 1024;
 
     private String resultFolderPath;
-    private String templateDirectory;
+    private Map<String, List<String>> templatesMap = new HashMap<>();
 
     /**
      * This function creates a rulebase html page by replacing the dynamic content in the template with the relevant information
@@ -180,7 +185,7 @@ public enum HtmlUtils {
         String htmlFileName = resultFolderPath +layerName + "-" + domain + HTML_SUFFIX;
         String jsonFileName = resultFolderPath +layerName + "-" + domain + JSON_SUFFIX;
         String objectsFile =  resultFolderPath + RULEBASE_FILE;
-        FileDetails details = new FileDetails(objectsFile,getRulebaseHtmlTemplate(),htmlFileName, jsonFileName,
+        FileDetails details = new FileDetails(objectsFile,getRulebaseHtmlTemplateLines(),htmlFileName, jsonFileName,
                                               uidToName, new RulebaseData(rulebase, inlineLayers, failedCreatingRulbase));
         createHtmlFile(details, FileType.RULEBASE);
 
@@ -194,10 +199,9 @@ public enum HtmlUtils {
      */
     public void createHtmlFile(FileDetails details, FileType fileType) throws IOException
     {
-        try (BufferedReader reader = Files.newBufferedReader(Paths.get(details.getTemplateName()), ENCODING);
-             PrintStream writer = new PrintStream(new File(details.getHtmlFileName()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
+        try (PrintStream writer = new PrintStream(new File(details.getHtmlFileName()))) {
+
+            for (String line : details.getTemplateLines()) {
                 if (!line.contains(TEMPLATE_PLACE_HOLDER))
                     writer.println(line);
                 else {
@@ -307,7 +311,7 @@ public enum HtmlUtils {
        String objectsFile = resultFolderPath + OBJECTS_FILE;
        String htmlFileName = resultFolderPath + packageName + "_objects" + HTML_SUFFIX;
        String jsonFileName = resultFolderPath + packageName + "_objects" + JSON_SUFFIX;
-       FileDetails details = new FileDetails(objectsFile, getObjectsHtmlTemplate(), htmlFileName, jsonFileName);
+       FileDetails details = new FileDetails(objectsFile, getObjectsHtmlTemplateLines(), htmlFileName, jsonFileName);
        createHtmlFile(details, FileType.OBJECTS);
     }
 
@@ -322,9 +326,8 @@ public enum HtmlUtils {
      */
     public boolean writeGatewaysHTML(String packageName, String objectsAsJsonString ) throws IOException
     {
-        String templateName = getObjectsHtmlTemplate();
         String pageName = packageName +"_gateway_objects";
-        return writeToHtmlPage(pageName, objectsAsJsonString, templateName);
+        return writeToHtmlPage(pageName, objectsAsJsonString, getObjectsHtmlTemplateLines());
     }
 
     /**
@@ -338,8 +341,7 @@ public enum HtmlUtils {
      */
     public boolean writeIndexHTML(String index) throws FileNotFoundException, UnsupportedEncodingException {
 
-        String templateName = getIndexHtmlTemplate();
-        return writeToHtmlPage("index", index, templateName);
+        return writeToHtmlPage("index", index, getIndexHtmlTemplateLines());
     }
 
     /**
@@ -347,17 +349,16 @@ public enum HtmlUtils {
      *
      * @param pageName the html page name
      * @param stringToReplace the information that needs to be written to the page
-     * @param templateName the name of the template file which the information will be written to
+     * @param objectsHtmlTemplateLines the lines of the template file which the information will be written to
      *
      * @return true on success.
      * @throws FileNotFoundException
      * @throws UnsupportedEncodingException
      */
-    private boolean writeToHtmlPage(String pageName, String stringToReplace, String templateName)
+    private boolean writeToHtmlPage(String pageName, String stringToReplace, List<String> objectsHtmlTemplateLines)
             throws FileNotFoundException, UnsupportedEncodingException{
 
-        List<String> objectsHTMLTemplate = readHTMLTemplate(templateName);
-        if(objectsHTMLTemplate == null || objectsHTMLTemplate.isEmpty()) {
+        if(objectsHtmlTemplateLines == null || objectsHtmlTemplateLines.isEmpty()) {
             return false;
         }
 
@@ -366,7 +367,7 @@ public enum HtmlUtils {
                 PrintWriter jsonWriter = new PrintWriter(resultFolderPath + pageName + JSON_SUFFIX)
         )
         {
-            replaceTemplate(stringToReplace, objectsHTMLTemplate, htmlWriter, jsonWriter);
+            replaceTemplate(stringToReplace, objectsHtmlTemplateLines, htmlWriter, jsonWriter);
         }
 
         return true;
@@ -403,17 +404,29 @@ public enum HtmlUtils {
      *
      * @return a list containing all of the lines in the file that are in a given path
      */
-    private List<String> readHTMLTemplate(String templatePath)
+    private List<String> readHTMLTemplateLines(Path templatePath)
     {
         List<String> templateFile = null;
         try {
-            templateFile = Files.readAllLines(Paths.get(templatePath), ENCODING);
+            templateFile = Files.readAllLines(templatePath, ENCODING);
         }
         catch (IOException e) {
-            System.out.println("Failed to read file" + templatePath);
+            System.out.println("Failed to read file" + templatePath.getFileName());
         }
 
         return templateFile;
+    }
+
+    private List<String> readHTMLTemplateLines(InputStream in) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+            List<String> result = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.add(line);
+            }
+
+            return result;
+        }
     }
 
     /**
@@ -425,14 +438,27 @@ public enum HtmlUtils {
         this.resultFolderPath = resultFolderPath;
     }
 
-    /**
-     * Set the template Directory
-     *
-     * @param templateDirectory
-     */
-    public void setTemplateDirectory(String templateDirectory)
-    {
-        this.templateDirectory = templateDirectory;
+    public void readTemplatesFromCustomDirectory(Path customDir) {
+        for (String template : ALL_TEMPLATES) {
+            templatesMap.put(template, readHTMLTemplateLines(customDir.resolve(template)));
+        }
+    }
+
+    public void readTemplatesFromClassPath() throws Exception {
+        final ClassLoader cl = getClass().getClassLoader();
+
+        for (String template : ALL_TEMPLATES) {
+            try (InputStream in = cl.getResourceAsStream(TEMPLATES_NAMESPACE + "/" + template)) {
+                if (in == null) {
+                    String errorMessage = "Template [" + template + "] was not found in classpath." +
+                            "\nYou can specify a custom templates directory with '-t' flag.";
+                    System.out.println(errorMessage);
+                    throw new Exception(errorMessage);
+                }
+
+                templatesMap.put(template, readHTMLTemplateLines(in));
+            }
+        }
     }
 
     /**
@@ -440,7 +466,7 @@ public enum HtmlUtils {
      *
      * @return the path
      */
-    private String getRulebaseHtmlTemplate()
+    private List<String> getRulebaseHtmlTemplateLines()
     {
         return getTemplatePath(RULEBASE_HTML_TEMPLATE);
     }
@@ -450,7 +476,7 @@ public enum HtmlUtils {
      *
      * @return the path
      */
-    private String getIndexHtmlTemplate()
+    private List<String> getIndexHtmlTemplateLines()
     {
         return getTemplatePath(INDEX_HTML_TEMPLATE);
     }
@@ -460,7 +486,7 @@ public enum HtmlUtils {
      *
      * @return the path
      */
-    private String getObjectsHtmlTemplate()
+    private List<String> getObjectsHtmlTemplateLines()
     {
         return getTemplatePath(OBJECTS_HTML_TEMPLATE);
     }
@@ -472,7 +498,7 @@ public enum HtmlUtils {
      *
      * @return the path
      */
-    private String getTemplatePath(String templateName){
-        return  Paths.get(templateDirectory, templateName).toString();
+    private List<String> getTemplatePath(String templateName){
+        return templatesMap.get(templateName);
     }
 }
