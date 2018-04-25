@@ -907,8 +907,10 @@ public class ShowPackageTool {
     private static void writeDictionary(String packageName){
 
         try {
+            configuration.getObjectsWriter().writeBytes("]");
             configuration.getHtmlUtils().writeObjectsHTML(packageName);
             configuration.getObjectsWriter().seek(0);
+            configuration.getObjectsWriter().writeBytes("[");
         }
         catch (IOException e) {
             handleException(e,"Failed to write a HTML file for objects.");
@@ -952,11 +954,13 @@ public class ShowPackageTool {
         }
 
         try {
+            configuration.getRulbaseWriter().writeBytes("]");
             configuration.getHtmlUtils().writeRulebaseHTML(layerName, packageName, domain, loginResponse.getApiVersion(),
                                                            rulebaseType.typeToString(),
                                                            configuration.getUidToName(),
                                                            inlineLayers, failedCreatingRulebase);
             configuration.getRulbaseWriter().seek(0);
+            configuration.getRulbaseWriter().writeBytes("[");
         }
         catch (IOException e) {
             handleException(e,"Failed to create rulbase page");
@@ -1171,7 +1175,10 @@ public class ShowPackageTool {
         }
 
         try {
-            fileWriter.writeBytes( "," + object.toJSONString());
+            if (fileWriter.getFilePointer() > 1) {
+                fileWriter.writeBytes(",");
+            }
+            fileWriter.writeBytes(object.toJSONString());
         }
         catch (IOException e) {
             return false;
