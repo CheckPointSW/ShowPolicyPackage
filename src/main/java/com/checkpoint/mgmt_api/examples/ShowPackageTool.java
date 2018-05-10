@@ -37,6 +37,14 @@ import java.util.logging.Handler;
  */
 public class ShowPackageTool {
 
+    static {
+        final String HTTPS_PROTOCOLS_PROPERTY = "https.protocols";
+
+        if (System.getProperty(HTTPS_PROTOCOLS_PROPERTY) == null) {
+            System.setProperty(HTTPS_PROTOCOLS_PROPERTY, "TLSv1,TLSv1.1,TLSv1.2");
+        }
+    }
+
     //Constants
     private static final int LIMIT = 10;
 
