@@ -7,12 +7,13 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
     <artifactId>web_api_show_package</artifactId>
-    <version>1.2.2</version>
+    <version>1.2.3</version>
     <name>Web API Show Package</name>
 
 	
     <properties>
-        <target.dirname>${project.build.directory}/${artifactId}</target.dirname>
+        <target.dirname>${project.build.directory}/${project.artifactId}</target.dirname>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 	
     <dependencies>
@@ -31,7 +32,7 @@
 		<dependency>
             <groupId>com.checkpoint.mgmt_api_library_java</groupId>
             <artifactId>mgmt_api_library_java</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </dependency>
     </dependencies>
 
@@ -49,8 +50,8 @@
                    <descriptorRefs>
                        <descriptorRef>jar-with-dependencies</descriptorRef>
                    </descriptorRefs>
-				   <finalName>${artifactId}-jar-with-dependencies</finalName>
-				   <appendAssemblyId>false</appendAssemblyId>
+				   <finalName>${project.artifactId}</finalName>
+				   <appendAssemblyId>true</appendAssemblyId>
                </configuration>
                <executions>
                    <execution>
@@ -67,6 +68,7 @@
            <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-compiler-plugin</artifactId>
+              <version>2.3.2</version>
               <configuration>
                   <source>1.7</source>
                   <target>1.7</target>
