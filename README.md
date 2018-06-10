@@ -10,9 +10,9 @@ The tool generates a compressed file (.tar.gz) containing the following files:
 • HTML files - The objects and rules presented as html files. The "index.html" acts as a starting point and  
 lists all the available items to display.
 	
-• JSON files The objects and rules exported as multiple JSON files.
+• JSON files - The objects and rules exported as multiple JSON files.
 	
-• Log file (e.g. show_package-yyyy-mm-dd_HH-MM-ss.elg) A log file containing debug information.
+• Log file (e.g. show_package-yyyy-mm-dd_HH-MM-ss.elg) - A log file containing debug information.
 
 ## Usage Syntax
 
@@ -28,6 +28,8 @@ Where:
 When running the command on a Multi domain server the default domain is the "MDS".
 
 • [-v] (Optional): List the existing policy packages.
+
+• [-c] (Optional): Retrieve access policy rules hit counts.
 
 • [-k package-name] (Optional): The package name or the uid of the policy package to show.  
 When a package-name is not provided, the tool will provide details on all the policy-packages  
