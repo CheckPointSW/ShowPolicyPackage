@@ -27,7 +27,7 @@ enum ShowPackageConfiguration {
 
     INSTANCE;
 
-    private static final String TOOL_VERSION     = "v1.2.3";
+    private static final String TOOL_VERSION     = "v1.2.4";
     private static final String TAR_SUFFIX       = ".tar.gz";
     private static final String LOG_SUFFIX       = ".elg";
     private static final String PREFIX           = "show_package-";
@@ -62,6 +62,7 @@ enum ShowPackageConfiguration {
     /*Show-package parameters*/
     private static String userRequestGateway;
     private static String userRequestPackage;
+    private static boolean showRulesHitCounts    = false;
     private List<String> installedPackages       = new ArrayList<>();
     private static Map<String, String> uidToName = new HashMap<>();
     List<GatewayAndServer> gatewaysWithPolicy    = new ArrayList<>();
@@ -230,8 +231,8 @@ enum ShowPackageConfiguration {
             Options option = checkFlagExistence(flag);
             if(option!= null){
                 if(option.equals(Options.listOfPackages) || option.equals(Options.help)
-                        || option.equals(Options.debugInfo) || option.equals(Options.unsafeState) ||
-                        option.equals(Options.deleteTempFiles)){
+                        || option.equals(Options.debugInfo) || option.equals(Options.unsafeState)
+                        || option.equals(Options.showHitCounts) || option.equals(Options.deleteTempFiles)){
                     //Options that don't require a value after the flag
                     option.runCommand("");
                     i++;
@@ -448,7 +449,7 @@ enum ShowPackageConfiguration {
         return logger;
     }
 
-     String getUsername()
+    String getUsername()
     {
         return username;
     }
@@ -530,10 +531,12 @@ enum ShowPackageConfiguration {
         return resultFolderPath;
     }
 
+    public boolean showRulesHitCounts() { return showRulesHitCounts; }
+
     /**
      * This enum defines the known flags and the actions each of them does.
      */
-   private enum Options
+    private enum Options
     {
         serverName("-m") {
             void runCommand(String value)
@@ -753,6 +756,26 @@ enum ShowPackageConfiguration {
                 return "";
             }
 
+        },
+        showHitCounts("-c") {
+            void runCommand(String value)
+            {
+                showRulesHitCounts = true;
+            }
+
+            String value(){
+                return "";
+            }
+
+            void flagToString()
+            {
+                System.out.println("\tShow Access Policy rules hit counts.\n\tDefault {false}");
+            }
+
+            String debugString()
+            {
+                return "showRulesHitCounts:(-c)=" + showRulesHitCounts;
+            }
         },
         proxySetting("-x") {
             void runCommand(String value)

@@ -593,6 +593,16 @@ public class ShowPackageTool {
         payload.put("uid", accessLayer.getUid());
         payload.put("details-level", "full");
         payload.put("use-object-dictionary", true);
+
+        if (configuration.showRulesHitCounts()) {
+            payload.put("show-hits", true);
+
+            JSONObject hitsSettings = new JSONObject();
+            hitsSettings.put("from-date", "1970-1-2");
+
+            payload.put("hits-settings", hitsSettings);
+        }
+
         configuration.getLogger().debug("Run command: 'show-access-rulebase' with payload: " + payload.toJSONString());
         return showRulebase(accessLayer, packageName, "show-access-rulebase", RulebaseType.ACCESS, payload, accessTypes);
 

@@ -118,9 +118,14 @@
 		<script>
         <%%>
 			// end of dynamic content
+		var firstAccessRule = data.find(function(e) {return e.type === "access-rule"});
+		var showHitCount = !!(firstAccessRule && firstAccessRule.hits);
 		</script>
 		<script>
 			var accessColumnHeaders = ["No.","Name", "Source", "Destination", "VPN", "Service/Application", getDataHeader(), "Action", "Track", "Time", "Install-On", "Comments"];
+			if (showHitCount) {
+				accessColumnHeaders.splice(1, 0, "Hits");
+			}
 			var natColumnHeaders = ["No.","Original Source", "Original Destination", "Original Services", "Translated Source", "Translated Destination", "Translated Services",  "Install-On", "Comments"];
 			var threatColumnHeaders = ["No.", "Name", "Protected Scope", "Source", "Destination", "Protection/Site", "Services", "Action","Track", "install-On", "Comments"];
 
@@ -369,6 +374,11 @@
 					td_data.appendChild(document.createTextNode(dataDirectionText));
 				}
 				tr.appendChild(td_number);
+
+				if (showHitCount) {
+					tr.appendChild(drawTextCell(ruleObject.hits || {}, "value"));
+				}
+
 				tr.appendChild(drawTextCell(ruleObject, "name"));
 				tr.appendChild(drawMultiValueCell(ruleObject["source"], ruleObject["source-negate"]));
 				tr.appendChild(drawMultiValueCell(ruleObject["destination"], ruleObject["destination-negate"]));
