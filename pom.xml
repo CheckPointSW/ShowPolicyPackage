@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
     <artifactId>web_api_show_package</artifactId>
-    <version>1.2.4</version>
+    <version>1.2.5</version>
     <name>Web API Show Package</name>
 
 	

@@ -645,31 +645,27 @@ public class ShowPackageTool {
      * @param packageName the package name that the layer belongs to
      * @param command the show command to be run (access/nat)
      * @param rulebaseType {@link RulebaseType} the rulebase's type
-     * @param payload the payload to run with the command
+     * @param payloadTemplate the payloadTemplate to run with the command
      * @param types supported rulebases
      *
      * @return True (False in case of an error).
      */
     private static boolean showRulebase(Layer layer, String packageName, String command,
-                                     RulebaseType rulebaseType, JSONObject payload, String[] types){
+                                        RulebaseType rulebaseType, JSONObject payloadTemplate, String[] types){
         ApiResponse res;
-        boolean finished = false;
-        int iterations   = 0;
-        int receivedObjects;
+
         int totalObjects = 0;
         int limit = LIMIT;
-        int inlineLayerNumber = 0;
 
         Set<Layer> inlineLayers = new HashSet<>();
 
-        while(!finished) {//Paging
-            payload.remove("offset");
-            payload.remove("limit");
-            payload.put("offset", iterations * limit);
-            payload.put("limit", limit);
 
+        // Getting the total
+        JSONObject gettingTotalPayload = new JSONObject(payloadTemplate);
+        gettingTotalPayload.put("details-level", "uid");
+        gettingTotalPayload.put("limit", "0");
         try {
-                res = client.apiCall(loginResponse, command, payload);
+            res = client.apiCall(loginResponse, command, gettingTotalPayload);
         }
         catch (ApiClientException e) {
             handleException(e, "Failed to run show rulebase (" + layer.getName() + ")");
@@ -678,6 +674,7 @@ public class ShowPackageTool {
             writeRulebase(layer.getName(), packageName, rulebaseType, layer.getDomain(), inlineLayers, true);
             return false;
         }
+
         if (res == null || !res.isSuccess()) {
             configuration.getLogger().severe("Failed to run show rulebase ('" + layer.getName()+ "'). "
                     + errorResponseToString(res));
@@ -686,32 +683,83 @@ public class ShowPackageTool {
             writeRulebase(layer.getName(), packageName, rulebaseType, layer.getDomain(), inlineLayers, true);
             return false;
         }
-            if(!res.getPayload().containsKey("total")){
-                configuration.getLogger().info("Rulebase '" + layer.getName() + "' is empty");
-                break;
-            }
+
+        if(res.getPayload().containsKey("total")){
             totalObjects = Integer.parseInt(res.getPayload().get("total").toString());
-            if (totalObjects == 0) {
-                break;
-                }
+        } else {
+            configuration.getLogger().info("Rulebase '" + layer.getName() + "' is empty");
+        }
+
+        if (totalObjects > 0) {
+            int offset = 0;
+
+            List<JSONObject> chunks = new ArrayList<>(totalObjects / limit);
+            while (offset < totalObjects) {
+                JSONObject payload = new JSONObject(payloadTemplate);
+                payload.put("offset", offset);
+                payload.put("limit", limit);
+                chunks.add(payload);
+
+                offset += limit;
+            }
+
+            try {
+                JSONArray rulebases = new JSONArray();
+                for (JSONObject chunk : chunks) {
+                    res = client.apiCall(loginResponse, command, chunk);
 
                     JSONArray jsonArrayOfObjectDictionary = (JSONArray)res.getPayload().get("objects-dictionary");
                     addObjectsInfoIntoCollections(jsonArrayOfObjectDictionary);
-            JSONArray rulebases = (JSONArray)res.getPayload().get("rulebase");
+                    final JSONArray currentRulebase = (JSONArray) res.getPayload().get("rulebase");
+
+
+                    if (!rulebases.isEmpty() && !currentRulebase.isEmpty()) {
+                        final JSONObject lastAdded = (JSONObject) rulebases.get(rulebases.size() - 1);
+                        final JSONObject firstNew = (JSONObject) currentRulebase.get(0);
+
+                        if (types[0].equalsIgnoreCase(lastAdded.get("type").toString())
+                                && types[0].equalsIgnoreCase(firstNew.get("type").toString())
+                                && Objects.equals(lastAdded.get("uid").toString(), firstNew.get("uid").toString())) {
+
+                            // firstNew is merged into lastAdded
+                            ((JSONArray)lastAdded.get("rulebase")).addAll((JSONArray)firstNew.get("rulebase"));
+                            lastAdded.put("to", firstNew.get("to"));
+
+                            // firstNew is deleted
+                            currentRulebase.remove(0);
+                        }
+
+                    }
+
+                    rulebases.addAll(currentRulebase);
+
+                    if (rulebases.size() > 1) {
+                        final JSONArray allExceptTheLastItemRulebase = new JSONArray();
+                        allExceptTheLastItemRulebase.addAll(rulebases.subList(0, rulebases.size() - 1));
+
+                        final JSONArray theLastItemRulebase = new JSONArray();
+                        theLastItemRulebase.addAll(rulebases.subList(rulebases.size() - 1, rulebases.size()));
+
+                        inlineLayers.addAll(addRulebase(allExceptTheLastItemRulebase, types, rulebaseType));
+
+                        rulebases = theLastItemRulebase;
+                    }
+                }
 
                 inlineLayers.addAll(addRulebase(rulebases, types, rulebaseType));
-                inlineLayerNumber += inlineLayers.size();
-
-            iterations++;
-            receivedObjects = Integer.parseInt(res.getPayload().get("to").toString());
-            if (receivedObjects == totalObjects || iterations * limit >= totalObjects) {
-                finished = true;
+            }
+            catch (ApiClientException e) {
+                handleException(e, "Failed to run show rulebase (" + layer.getName() + ")");
+                configuration.getLogger().debug("Following the error, creating an empty html file for layer: '"
+                        + layer.getName() + "'");
+                writeRulebase(layer.getName(), packageName, rulebaseType, layer.getDomain(), inlineLayers, true);
+                return false;
             }
         }
 
 
         configuration.getLogger().debug("Found " + totalObjects + " rules in : '" + layer.getName() + "'");
-        configuration.getLogger().debug("Found " + inlineLayerNumber + " inline layer(s)");
+        configuration.getLogger().debug("Found " + inlineLayers.size() + " inline layer(s)");
         configuration.getLogger().debug("Creating html file for layer: '" + layer.getName() + "'");
         boolean writeRulebaseResult = writeRulebase(layer.getName(), packageName, rulebaseType,
                 layer.getDomain(), inlineLayers, false);
@@ -770,7 +818,7 @@ public class ShowPackageTool {
             payload.put("limit", limit);
 
             try {
-                res = client.apiCall(loginResponse, "show-threat-rulebase", payload.toJSONString());
+                res = client.apiCall(loginResponse, "show-threat-rulebase", payload);
             }
             catch (ApiClientException e) {
                 handleException(e, "Failed to run \"show threat-rulebase\" ('" + threatLayer.getName() + "')");

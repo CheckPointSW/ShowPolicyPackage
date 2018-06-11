@@ -27,7 +27,7 @@ enum ShowPackageConfiguration {
 
     INSTANCE;
 
-    private static final String TOOL_VERSION     = "v1.2.4";
+    private static final String TOOL_VERSION     = "v1.2.5";
     private static final String TAR_SUFFIX       = ".tar.gz";
     private static final String LOG_SUFFIX       = ".elg";
     private static final String PREFIX           = "show_package-";
