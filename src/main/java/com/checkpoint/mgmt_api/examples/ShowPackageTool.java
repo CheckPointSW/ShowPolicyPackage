@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2016 Check Point Software Technologies Ltd.  All Rights Reserved.
  * Permission to use, copy, modify, and distribute this software and its documentation for any purpose, without fee and without a signed licensing agreement, is hereby
  * granted, provided that the above copyright notice, this paragraph and the following three paragraphs appear in all copies, modifications, and distributions.
@@ -18,12 +18,18 @@
 package com.checkpoint.mgmt_api.examples;
 
 import com.checkpoint.mgmt_api.client.*;
-import com.checkpoint.mgmt_api.objects.*;
+import com.checkpoint.mgmt_api.objects.GatewayAndServer;
+import com.checkpoint.mgmt_api.objects.IndexView;
+import com.checkpoint.mgmt_api.objects.Layer;
+import com.checkpoint.mgmt_api.objects.PolicyPackage;
 import com.checkpoint.mgmt_api.utils.TarGZUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -230,6 +236,7 @@ public class ShowPackageTool {
             String webApiVersion = loginResponse.getApiVersion();
             configuration.getLogger().info("Management API running version: " + webApiVersion);
         }
+
         //Set the tool version
         configuration.getLogger().info("show_package " + configuration.getToolVersion());
         configuration.getLogger().info("Chosen port: " + loginResponse.getPort());
@@ -238,28 +245,30 @@ public class ShowPackageTool {
     /**
      * This function collects all the gateways and servers that exist on the management server
      */
-    private static void collectGatewaysInUseAndInstalledPolicies(){
+    private static void collectGatewaysInUseAndInstalledPolicies()
+    {
 
         ApiResponse res = null;
         try {
             configuration.getLogger().debug("Run command: 'show-gateways-and-servers' with details level 'full'");
-            res = client.apiQuery(loginResponse,"show-gateways-and-servers","objects","{\"details-level\" : \"full\"}");
+            res = client.apiQuery(loginResponse, "show-gateways-and-servers", "objects", "{\"details-level\" : \"full\"}");
         }
         catch (ApiClientException e) {
             logoutReportAndExit("Failed to run gateways-and-servers command." + e.getMessage(), MessageType.SEVERE);
         }
         if (res == null || !res.isSuccess()) {
-            logoutReportAndExit("Failed to run gateways-and-servers command. " + errorResponseToString(res) , MessageType.SEVERE);
+            logoutReportAndExit("Failed to run gateways-and-servers command. " + errorResponseToString(res), MessageType.SEVERE);
         }
-        if(!res.getPayload().containsKey("objects")){
+
+        if (!res.getPayload().containsKey("objects")) {
             configuration.getLogger().debug("'objects' key doesn't exist in response from" +
-                                                       " 'show-gateways-and-servers' command");
+                    " 'show-gateways-and-servers' command");
             return;
         }
-        JSONArray allGatewaysAndServers = (JSONArray)res.getPayload().get("objects");
+        JSONArray allGatewaysAndServers = (JSONArray) res.getPayload().get("objects");
 
         int numberOfObjects = allGatewaysAndServers.size();
-        configuration.getLogger().debug("Found " +numberOfObjects+ " gateways from 'show-gateways-and-servers' ");
+        configuration.getLogger().debug("Found " + numberOfObjects + " gateways from 'show-gateways-and-servers' ");
 
         //pass over all the gateways and servers
         for (Object gatewayOrServer : allGatewaysAndServers) {
@@ -274,8 +283,8 @@ public class ShowPackageTool {
             }
         }
         int numberOfObjectsWithPolicies = configuration.getGatewaysWithPolicy().size();
-        configuration.getLogger().info("Found " +numberOfObjectsWithPolicies +
-                                               " gateways that have a policy installed on them");
+        configuration.getLogger().info("Found " + numberOfObjectsWithPolicies +
+                " gateways that have a policy installed on them");
 
     }
 
@@ -310,8 +319,8 @@ public class ShowPackageTool {
             objectsInUse.addAll(allVpnCommunities);
         }
 
-            int numberObjectsInUse = objectsInUse.size();
-            configuration.getLogger().debug("Found " +numberObjectsInUse + " vpn communities");
+        int numberObjectsInUse = objectsInUse.size();
+        configuration.getLogger().debug("Found " +numberObjectsInUse + " vpn communities");
 
         return objectsInUse;
     }
@@ -334,7 +343,7 @@ public class ShowPackageTool {
 
             //Checks if the flag -v (show the packages) is set to True,
             if(configuration.showPackagesList()){
-               printTheExistingPackagesAndExit(allExistsPackages);
+                printTheExistingPackagesAndExit(allExistsPackages);
             }
 
             if ( allExistsPackages.isEmpty()) {
@@ -349,14 +358,14 @@ public class ShowPackageTool {
                 //Check whether there are packages which were installed on a gateway
                 if( configuration.getInstalledPackages().isEmpty() ){
                     System.out.println("More than one package exists but neither one of them is installed on a gateway.\n" +
-                                               "In order to show a specific package, run with -k [package name].\n"+
-                                               "In order to show all the existing packages, run with -v\n");
+                            "In order to show a specific package, run with -k [package name].\n"+
+                            "In order to show all the existing packages, run with -v\n");
 
                     return;
                 }
 
                 configuration.getLogger().info("More then one package exists," +
-                                                           " show all packages that are installed on a gateway");
+                        " show all packages that are installed on a gateway");
                 //More then one package exists, show all packages that are installed on a gateway
                 for (String packageName : configuration.getInstalledPackages()) {
                     policy = buildPackagePolicy(packageName, objectsInUse);
@@ -377,9 +386,9 @@ public class ShowPackageTool {
         }
         else{
             configuration.getLogger().info("Show only a specific package (the one that was entered as an argument): '"
-                                                   + configuration.getUserRequestPackage() + "'");
+                    + configuration.getUserRequestPackage() + "'");
             //Show only a specific package (the one that was entered as an argument)
-             policy = buildPackagePolicy(configuration.getUserRequestPackage(), objectsInUse);
+            policy = buildPackagePolicy(configuration.getUserRequestPackage(), objectsInUse);
             if (policy != null) {
                 index.getPolicyPackages().add(policy);
             }
@@ -522,7 +531,7 @@ public class ShowPackageTool {
      * @return natLayer nat layer that the function sets
      */
     private static Layer aggregatePackageLayers(String packageName, List<Layer> accessLayers,
-                                               List<Layer> threatLayers){
+                                                List<Layer> threatLayers){
         ApiResponse res  = null;
         Layer natLayer = null;
         try {
@@ -531,12 +540,12 @@ public class ShowPackageTool {
         }
         catch (ApiClientException e) {
             logoutReportAndExit("Failed to run show-package command on package: '" + packageName + "'. Aborting. " +
-                                  ""+ e.getMessage(), MessageType.SEVERE);
+                    ""+ e.getMessage(), MessageType.SEVERE);
         }
 
         if (res == null || !res.isSuccess()) {
             configuration.getLogger().warning("Failed to run show-package command on package: '" + packageName +
-                                                      "'. Aborting. " + errorResponseToString(res));
+                    "'. Aborting. " + errorResponseToString(res));
         }
         else {
             JSONObject response = res.getPayload();
@@ -659,24 +668,24 @@ public class ShowPackageTool {
             payload.put("offset", iterations * limit);
             payload.put("limit", limit);
 
-            try {
+        try {
                 res = client.apiCall(loginResponse, command, payload);
-            }
-            catch (ApiClientException e) {
-                    handleException(e, "Failed to run show rulebase (" + layer.getName() + ")");
-                    configuration.getLogger().debug("Following the error, creating an empty html file for layer: '"
-                                                            + layer.getName() + "'");
-                    writeRulebase(layer.getName(), packageName, rulebaseType, layer.getDomain(), inlineLayers, true);
-                    return false;
-            }
-            if (res == null || !res.isSuccess()) {
-               configuration.getLogger().severe("Failed to run show rulebase ('" + layer.getName()+ "'). "
-                                                        + errorResponseToString(res));
-                configuration.getLogger().debug("Following the error, creating an empty html file for layer: '"
-                                                        + layer.getName() + "'");
-                writeRulebase(layer.getName(), packageName, rulebaseType, layer.getDomain(), inlineLayers, true);
-                return false;
-            }
+        }
+        catch (ApiClientException e) {
+            handleException(e, "Failed to run show rulebase (" + layer.getName() + ")");
+            configuration.getLogger().debug("Following the error, creating an empty html file for layer: '"
+                    + layer.getName() + "'");
+            writeRulebase(layer.getName(), packageName, rulebaseType, layer.getDomain(), inlineLayers, true);
+            return false;
+        }
+        if (res == null || !res.isSuccess()) {
+            configuration.getLogger().severe("Failed to run show rulebase ('" + layer.getName()+ "'). "
+                    + errorResponseToString(res));
+            configuration.getLogger().debug("Following the error, creating an empty html file for layer: '"
+                    + layer.getName() + "'");
+            writeRulebase(layer.getName(), packageName, rulebaseType, layer.getDomain(), inlineLayers, true);
+            return false;
+        }
             if(!res.getPayload().containsKey("total")){
                 configuration.getLogger().info("Rulebase '" + layer.getName() + "' is empty");
                 break;
@@ -684,14 +693,14 @@ public class ShowPackageTool {
             totalObjects = Integer.parseInt(res.getPayload().get("total").toString());
             if (totalObjects == 0) {
                 break;
-            }
+                }
 
-            JSONArray jsonArrayOfObjectDictionary = (JSONArray)res.getPayload().get("objects-dictionary");
-            addObjectsInfoIntoCollections(jsonArrayOfObjectDictionary);
+                    JSONArray jsonArrayOfObjectDictionary = (JSONArray)res.getPayload().get("objects-dictionary");
+                    addObjectsInfoIntoCollections(jsonArrayOfObjectDictionary);
             JSONArray rulebases = (JSONArray)res.getPayload().get("rulebase");
 
-            inlineLayers.addAll(addRulebase(rulebases, types, rulebaseType));
-            inlineLayerNumber += inlineLayers.size();
+                inlineLayers.addAll(addRulebase(rulebases, types, rulebaseType));
+                inlineLayerNumber += inlineLayers.size();
 
             iterations++;
             receivedObjects = Integer.parseInt(res.getPayload().get("to").toString());
@@ -699,14 +708,16 @@ public class ShowPackageTool {
                 finished = true;
             }
         }
+
+
         configuration.getLogger().debug("Found " + totalObjects + " rules in : '" + layer.getName() + "'");
         configuration.getLogger().debug("Found " + inlineLayerNumber + " inline layer(s)");
         configuration.getLogger().debug("Creating html file for layer: '" + layer.getName() + "'");
         boolean writeRulebaseResult = writeRulebase(layer.getName(), packageName, rulebaseType,
-                                                    layer.getDomain(), inlineLayers, false);
+                layer.getDomain(), inlineLayers, false);
 
         if (!writeRulebaseResult){
-          writeRulebase(layer.getName(), packageName, rulebaseType, layer.getDomain(), inlineLayers, true);
+            writeRulebase(layer.getName(), packageName, rulebaseType, layer.getDomain(), inlineLayers, true);
         }
 
         // Write rulebase inline layers
@@ -747,26 +758,30 @@ public class ShowPackageTool {
 
         configuration.getLogger().info("Starting handling threat layer: '" + threatLayer.getName() + "'");
         configuration.getLogger().debug("Run command: 'show-threat-rulebase' for rulebase: '" + threatLayer.getUid()
-                                                + "' ('" + threatLayer.getName() + "') with details level 'full'");
+                + "' ('" + threatLayer.getName() + "') with details level 'full'");
+
+        JSONObject payload = new JSONObject();
+        payload.put("uid", threatLayer.getUid());
+        payload.put("details-level", "full");
+        payload.put("use-object-dictionary",true);
 
         while (!finished) {
-
-            String payload = "{\"offset\" : " + iterations * limit + ", \"limit\" : " + limit + ",\"uid\" : \"" +
-                    threatLayer.getUid() + "\",\"details-level\" : \"full\",\"use-object-dictionary\" : true}";
+            payload.put("offset", iterations * limit);
+            payload.put("limit", limit);
 
             try {
-                res = client.apiCall(loginResponse, "show-threat-rulebase", payload);
+                res = client.apiCall(loginResponse, "show-threat-rulebase", payload.toJSONString());
             }
             catch (ApiClientException e) {
                 handleException(e, "Failed to run \"show threat-rulebase\" ('" + threatLayer.getName() + "')");
                 writeRulebase(threatLayer.getName(),packageName,RulebaseType.THREAT, threatLayer.getDomain(),
-                              Collections.<Layer>emptySet(), true);
+                        Collections.<Layer>emptySet(), true);
                 return false;
             }
 
             if (checkAndExitInCaseOfError(res, threatLayer, iterations)){
                 writeRulebase(threatLayer.getName(),packageName,RulebaseType.THREAT, threatLayer.getDomain(),
-                              Collections.<Layer>emptySet(), true);
+                        Collections.<Layer>emptySet(), true);
                 return false;
             }
 
@@ -792,7 +807,7 @@ public class ShowPackageTool {
         configuration.getLogger().info("Done handling rulebase: '" + threatLayer.getName() + "'");
 
         return(writeRulebase(threatLayer.getName(),packageName,RulebaseType.THREAT, threatLayer.getDomain(),
-                             Collections.<Layer>emptySet(), false));
+                Collections.<Layer>emptySet(), false));
     }
 
     /**
@@ -814,12 +829,12 @@ public class ShowPackageTool {
         if(!res.isSuccess()) {
             if ("IPS".equalsIgnoreCase(threatLayer.getName())) {
                 configuration.getLogger().warning("Failed to run show-threat-rulebase command ('" +
-                                                  threatLayer.getName() + "'): " + errorResponseToString(res) +
-                                                  ". probably IPS does not exist - continue");
+                        threatLayer.getName() + "'): " + errorResponseToString(res) +
+                        ". probably IPS does not exist - continue");
             }
             else {
                 configuration.getLogger().severe("Failed to run show-threat-rulebase command ('"
-                                                          + threatLayer.getName() + "'). " +errorResponseToString(res));
+                        + threatLayer.getName() + "'). " +errorResponseToString(res));
             }
             return true;
         }
@@ -882,6 +897,7 @@ public class ShowPackageTool {
         ApiResponse res;
         //Creating the payload
         JSONObject payload = new JSONObject();
+
         payload.put("rule-uid", ruleUid);
         payload.put("details-level", "full");
         payload.put("use-object-dictionary",true);
@@ -889,8 +905,8 @@ public class ShowPackageTool {
 
         try {
             configuration.getLogger().debug("Run command: 'show-threat-rule-exception-rulebase' " +
-                                                       "for threat layer: '" + threatLayer.getName() + "' ('" + ruleUid
-                                                    + "') with details level 'full'");
+                    "for threat layer: '" + threatLayer.getName() + "' ('" + ruleUid
+                    + "') with details level 'full'");
 
             res = client.apiCall(loginResponse,"show-threat-rule-exception-rulebase", payload);
         }
@@ -904,14 +920,14 @@ public class ShowPackageTool {
             }
             catch (ApiClientException e1) {
                 handleException(e1,"Failed to run show-threat-rule-exception-rulebase command ("
-                                                         + threatLayer.getName() + "'" + threatLayer.getUid() + "')");
+                        + threatLayer.getName() + "'" + threatLayer.getUid() + "')");
                 return null;
             }
         }
         if (res == null || !res.isSuccess()) {
             configuration.getLogger().severe("Failed to run show-threat-rule-exception-rulebase command ('"
-                                                     + threatLayer.getName() + "' uid: '" + threatLayer.getUid() + "'). " +
-                                                     errorResponseToString(res));
+                    + threatLayer.getName() + "' uid: '" + threatLayer.getUid() + "'). " +
+                    errorResponseToString(res));
             return null;
         }
         return res.getPayload();
@@ -964,7 +980,7 @@ public class ShowPackageTool {
      * @return True (False in case of an error).
      */
     private static boolean writeRulebase(String layerName,String packageName, RulebaseType rulebaseType,
-                                            String domain, Set<Layer> inlineLayers, boolean failedCreatingRulebase){
+                                         String domain, Set<Layer> inlineLayers, boolean failedCreatingRulebase){
 
         //If it's nat change the layer name
         if(rulebaseType == RulebaseType.NAT){
@@ -974,9 +990,9 @@ public class ShowPackageTool {
         try {
             configuration.getRulbaseWriter().writeBytes("]");
             configuration.getHtmlUtils().writeRulebaseHTML(layerName, packageName, domain, loginResponse.getApiVersion(),
-                                                           rulebaseType.typeToString(),
-                                                           configuration.getUidToName(),
-                                                           inlineLayers, failedCreatingRulebase);
+                    rulebaseType.typeToString(),
+                    configuration.getUidToName(),
+                    inlineLayers, failedCreatingRulebase);
             configuration.getRulbaseWriter().seek(0);
             configuration.getRulbaseWriter().writeBytes("[");
         }
@@ -1052,7 +1068,6 @@ public class ShowPackageTool {
         Set<Layer> inlineLayers = new HashSet<>();
 
         for (Object ruleObject : rulebase) {
-
             JSONObject rule = (JSONObject) ruleObject;
 
             //Handle section
@@ -1061,13 +1076,13 @@ public class ShowPackageTool {
                 if (jsonArrayOfRules.size() > 0) {
 
                     writeJSonObjectToFile(rule, configuration.getRulbaseWriter(), true);
-                    for (int i=0; i< jsonArrayOfRules.size(); i++){
-                        JSONObject jsonObject = (JSONObject)jsonArrayOfRules.get(i);
-                        writeJSonObjectToFile(jsonObject, configuration.getRulbaseWriter(),true);
+                    for (Object jsonArrayOfRule : jsonArrayOfRules) {
+                        JSONObject jsonObject = (JSONObject) jsonArrayOfRule;
+                        writeJSonObjectToFile(jsonObject, configuration.getRulbaseWriter(), true);
                         //Check existence of the inline-layer
-                        if ( rulebaseType == RulebaseType.ACCESS && jsonObject.get("inline-layer") != null ) {
+                        if (rulebaseType == RulebaseType.ACCESS && jsonObject.get("inline-layer") != null) {
                             Layer inlineLayer = createInlineLayer(jsonObject.get("inline-layer").toString());
-                            if ( inlineLayer != null ) {
+                            if (inlineLayer != null) {
                                 inlineLayers.add(inlineLayer);
                             }
                         }
@@ -1079,13 +1094,13 @@ public class ShowPackageTool {
             else if (types[1].equalsIgnoreCase(rule.get("type").toString()) ||
                     types[2].equalsIgnoreCase(rule.get("type").toString())) {
 
-                writeJSonObjectToFile(rule, configuration.getRulbaseWriter(),true);
+                writeJSonObjectToFile(rule, configuration.getRulbaseWriter(), true);
 
                 //Check existence of the inline-layer
-                if ( rulebaseType == RulebaseType.ACCESS && rule.get("inline-layer") != null ) {
+                if (rulebaseType == RulebaseType.ACCESS && rule.get("inline-layer") != null) {
 
                     Layer inlineLayer = createInlineLayer(rule.get("inline-layer").toString());
-                    if ( inlineLayer != null ) {
+                    if (inlineLayer != null) {
                         inlineLayers.add(inlineLayer);
                     }
                 }
@@ -1119,7 +1134,7 @@ public class ShowPackageTool {
 
             String errorMessage = res != null && res.getErrorMessage() != null ? " Error: '" + res.getErrorMessage() + "'" : "";
             configuration.getLogger().severe("Failed to run show-access-layer UID: ('" + inlineLayerUid + "')" +
-                                                errorMessage);
+                    errorMessage);
             return null;
         }
 
@@ -1131,14 +1146,14 @@ public class ShowPackageTool {
      *
      * @param objects the objects that will added to the collection
      */
-    private static void addObjectsInfoIntoCollections(JSONArray objects){
-
+    private static void addObjectsInfoIntoCollections(JSONArray objects)
+    {
         if (objects == null) {
             return;
         }
-        for (int i = 0; i < objects.size(); i++) {
-            JSONObject object = (JSONObject) objects.get(i);
-            addObjectInformationIntoCollections(object);
+
+        for (Object o : objects) {
+            addObjectInformationIntoCollections((JSONObject) o);
         }
     }
 
@@ -1149,14 +1164,17 @@ public class ShowPackageTool {
      */
     private static void addObjectInformationIntoCollections(JSONObject object){
 
+        final Map<String, String> uidToName = configuration.getUidToName();
+
         String uid = object.get("uid").toString();
-        if (!configuration.getUidToName().containsKey(uid)) {
+        if (!uidToName.containsKey(uid)) {
             //If the object doesn't already exist in the collection
             String name = "";
             if(object.containsKey("name") && object.get("name") != null ){
                 name = object.get("name").toString();
             }
-            configuration.getUidToName().put(uid, name);
+            uidToName.put(uid, name);
+
             writeJSonObjectToFile(object, configuration.getObjectsWriter(), false);
         }
     }
@@ -1404,14 +1422,16 @@ public class ShowPackageTool {
         if(configuration != null) {
             if (message != null && !message.isEmpty()) {
                 //Write severe message to the log file
-                if (MessageType.SEVERE == messageType) {
-                    configuration.getLogger().severe(message);
-                }
-                else if (MessageType.WARNING == messageType) {
-                    configuration.getLogger().warning(message);
-                }
-                else if (MessageType.INFO == messageType) {
-                    configuration.getLogger().info(message);
+                switch (messageType) {
+                    case SEVERE:
+                        configuration.getLogger().severe(message);
+                        break;
+                    case WARNING:
+                        configuration.getLogger().warning(message);
+                        break;
+                    case INFO:
+                        configuration.getLogger().info(message);
+                        break;
                 }
             }
             exitCode = configuration.getLogger().getMostSevereLevel();
@@ -1473,7 +1493,6 @@ public class ShowPackageTool {
             handle.close();
         }
     }
-
 }
 
 
