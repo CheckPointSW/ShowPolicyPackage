@@ -55,7 +55,7 @@
         // end of dynamic content
     </script>
     <script>
-        var keysOrderArray = ["uid", "name", "type", "domain", "ipv4-address", "ipv6-address", "subnet4", "subnet-mask", "mask-length4", "subnet6", "mask-length6"];
+        var keysOrderArray = ["uid", "name", "type", "domain", "ipv4-address", "ipv6-address", "subnet4", "subnet-mask", "mask-length4", "subnet6", "mask-length6", "port"];
 
         var objects = {};
 
