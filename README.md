@@ -20,7 +20,7 @@ To use the tool you have to obtain `web_api_show_package-jar-with-dependencies.j
 
 Then you run:
 
-```java -jar web_api_show_package-jar-with-dependencies.jar [-d domain-name] [-k package-name] [-v] [-c] [-n port-number] [-o path]```
+```java -jar web_api_show_package-jar-with-dependencies.jar [-d domain-name] [-k package-name] [-v] [-c] [-n port-number] [-o path] [--show-membership (true|false)] [--dereference-group-members (true|false)]```
       
 Where:
 
@@ -41,6 +41,14 @@ Default value is 443.
 • [-o path] (Optional): The output path. The location in which to save the resulting .tar.gz file.  
 The parameter can also be the full path (including the .tar.gz filename).   
 The default is the current directory.  
+
+• [--show-membership (true|false)] (Optional): Whether to calculate groups membership for the objects ("groups" field).
+This flag is supported from R80.10 Jumbo HF take 70
+        
+• [--dereference-group-members (true|false)] (Optional): Whether to dereference group members.
+This flag is supported from R80.10 Jumbo HF take 70
+
+Use "--version" option to print the version of the tool
 
 Use "-h" option in order to see the full list of options to configure the tool  
 

@@ -27,7 +27,7 @@ enum ShowPackageConfiguration {
 
     INSTANCE;
 
-    private static final String TOOL_VERSION     = "v1.2.5";
+    private static final String TOOL_VERSION     = "v1.3.0";
     private static final String TAR_SUFFIX       = ".tar.gz";
     private static final String LOG_SUFFIX       = ".elg";
     private static final String PREFIX           = "show_package-";
@@ -63,6 +63,8 @@ enum ShowPackageConfiguration {
     private static String userRequestGateway;
     private static String userRequestPackage;
     private static boolean showRulesHitCounts    = false;
+    private static Boolean showMembership        = null;
+    private static Boolean dereferenceGroupMembers = null;
     private List<String> installedPackages       = new ArrayList<>();
     private static Map<String, String> uidToName = new HashMap<>();
     List<GatewayAndServer> gatewaysWithPolicy    = new ArrayList<>();
@@ -232,7 +234,8 @@ enum ShowPackageConfiguration {
             if(option!= null){
                 if(option.equals(Options.listOfPackages) || option.equals(Options.help)
                         || option.equals(Options.debugInfo) || option.equals(Options.unsafeState)
-                        || option.equals(Options.showHitCounts) || option.equals(Options.deleteTempFiles)){
+                        || option.equals(Options.showHitCounts) || option.equals(Options.deleteTempFiles)
+                        || option.equals(Options.version)){
                     //Options that don't require a value after the flag
                     option.runCommand("");
                     i++;
@@ -533,6 +536,16 @@ enum ShowPackageConfiguration {
 
     public boolean showRulesHitCounts() { return showRulesHitCounts; }
 
+    public Boolean getShowMembership()
+    {
+        return showMembership;
+    }
+
+    public Boolean getDereferenceGroupMembers()
+    {
+        return dereferenceGroupMembers;
+    }
+
     /**
      * This enum defines the known flags and the actions each of them does.
      */
@@ -777,6 +790,60 @@ enum ShowPackageConfiguration {
                 return "showRulesHitCounts:(-c)=" + showRulesHitCounts;
             }
         },
+        showMembershipOption("--show-membership") {
+            void runCommand(String value)
+            {
+                if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")) {
+                    final String errorMessage = "The value of --show-membership is invalid (must be true or false)";
+                    System.out.println(errorMessage);
+                    throw new IllegalArgumentException(errorMessage);
+                }
+
+                ShowPackageConfiguration.showMembership = Boolean.parseBoolean(value);
+            }
+
+            String value(){
+                return " (true|false)";
+            }
+
+            void flagToString()
+            {
+                System.out.println("\tWhether to calculate groups membership for the objects (\"groups\" field)" +
+                        "\n\tThis flag is supported from R80.10 Jumbo HF take 70");
+            }
+
+            String debugString()
+            {
+                return "showMembership:(--show-membership)=" + ShowPackageConfiguration.showMembership;
+            }
+        },
+        dereferenceGroupMembers("--dereference-group-members") {
+            void runCommand(String value)
+            {
+                if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")) {
+                    final String errorMessage = "The value of --dereference-group-members is invalid (must be true or false)";
+                    System.out.println(errorMessage);
+                    throw new IllegalArgumentException(errorMessage);
+                }
+
+                ShowPackageConfiguration.dereferenceGroupMembers = Boolean.parseBoolean(value);
+            }
+
+            String value(){
+                return " (true|false)";
+            }
+
+            void flagToString()
+            {
+                System.out.println("\tWhether to dereference group members." +
+                        "\n\tThis flag is supported from R80.10 Jumbo HF take 70");
+            }
+
+            String debugString()
+            {
+                return "dereferenceGroupMembers:(--dereference-group-members)=" + ShowPackageConfiguration.dereferenceGroupMembers;
+            }
+        },
         proxySetting("-x") {
             void runCommand(String value)
             {
@@ -804,7 +871,10 @@ enum ShowPackageConfiguration {
             void flagToString()
             {
                 System.out.println(
-                        "\tCustom Template Path.\n\tPath where the custom templates are stored.\n\tThe default templates are bundled into the jar.");
+                        "\t[DEPRECATED]" +
+                                "\n\tCustom Template Path." +
+                                "\n\tPath where the custom templates are stored." +
+                                "\n\tThe default templates are bundled into the jar.");
             }
             String debugString()
             {
@@ -828,6 +898,25 @@ enum ShowPackageConfiguration {
             String debugString()
             {
                 return "debug:(-s)=" + true;
+            }
+            String value(){
+                return "";
+            }
+        },
+        version("--version") {
+            void runCommand(String value)
+            {
+                System.out.println(TOOL_VERSION);
+                System.exit(0);
+            }
+
+            void flagToString()
+            {
+                System.out.println("\tPrint version and exit.");
+            }
+            String debugString()
+            {
+                return "version:(--version)=" + true;
             }
             String value(){
                 return "";

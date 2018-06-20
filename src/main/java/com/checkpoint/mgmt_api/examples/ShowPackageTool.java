@@ -585,6 +585,16 @@ public class ShowPackageTool {
         return natLayer;
     }
 
+    private static void addNewFlagsToControlDetailsLevel(JSONObject payload) {
+        if (configuration.getShowMembership() != null) {
+            payload.put("show-membership", configuration.getShowMembership());
+        }
+
+        if (configuration.getDereferenceGroupMembers() != null) {
+            payload.put("dereference-group-members", configuration.getDereferenceGroupMembers());
+        }
+    }
+
     /**
      * This function creates a payload in order to create a html page of a given access layer.
      *
@@ -602,6 +612,8 @@ public class ShowPackageTool {
         payload.put("uid", accessLayer.getUid());
         payload.put("details-level", "full");
         payload.put("use-object-dictionary", true);
+
+        addNewFlagsToControlDetailsLevel(payload);
 
         if (configuration.showRulesHitCounts()) {
             payload.put("show-hits", true);
@@ -633,6 +645,9 @@ public class ShowPackageTool {
         payload.put("package", packageName);
         payload.put("details-level", "full");
         payload.put("use-object-dictionary", true);
+
+        addNewFlagsToControlDetailsLevel(payload);
+
         configuration.getLogger().debug("Run command: 'show-nat-rulebase' with payload: " + payload.toJSONString());
         return showRulebase( natLayer, packageName, "show-nat-rulebase", RulebaseType.NAT, payload, natTypes);
 
@@ -813,6 +828,8 @@ public class ShowPackageTool {
         payload.put("details-level", "full");
         payload.put("use-object-dictionary",true);
 
+        addNewFlagsToControlDetailsLevel(payload);
+
         while (!finished) {
             payload.put("offset", iterations * limit);
             payload.put("limit", limit);
@@ -948,7 +965,10 @@ public class ShowPackageTool {
 
         payload.put("rule-uid", ruleUid);
         payload.put("details-level", "full");
-        payload.put("use-object-dictionary",true);
+        payload.put("use-object-dictionary", true);
+
+        addNewFlagsToControlDetailsLevel(payload);
+
         payload.put("uid", threatLayer.getUid());
 
         try {
