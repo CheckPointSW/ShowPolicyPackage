@@ -145,7 +145,13 @@
 				else {
 					td_text = "New Section";
 				}
-				td_text += " (" + parentRulePrefix + sectionObject["from"] +"-" + parentRulePrefix + sectionObject["to"] +")";
+
+				if (sectionObject["from"] && sectionObject["to"]) {
+				    td_text += " (" + parentRulePrefix + sectionObject["from"] + "-" + parentRulePrefix + sectionObject["to"] + ")";
+				} else {
+				    td_text += " (No Rules)";
+				}
+
 				td.className = "section";
 				td.setAttribute("colSpan", columns.length);
 				td.appendChild(document.createTextNode(td_text));

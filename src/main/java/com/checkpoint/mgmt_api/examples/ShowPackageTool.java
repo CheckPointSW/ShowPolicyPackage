@@ -1140,10 +1140,12 @@ public class ShowPackageTool {
 
             //Handle section
             if (types[0].equalsIgnoreCase(rule.get("type").toString())) {
-                JSONArray jsonArrayOfRules = (JSONArray) rule.get("rulebase");
-                if (jsonArrayOfRules.size() > 0) {
 
-                    writeJSonObjectToFile(rule, configuration.getRulbaseWriter(), true);
+                // The rules are added later following the section (to get a flat view)
+                JSONArray jsonArrayOfRules = (JSONArray) rule.get("rulebase");
+                writeJSonObjectToFile(rule, configuration.getRulbaseWriter(), true);
+
+                if (jsonArrayOfRules.size() > 0) {
                     for (Object jsonArrayOfRule : jsonArrayOfRules) {
                         JSONObject jsonObject = (JSONObject) jsonArrayOfRule;
                         writeJSonObjectToFile(jsonObject, configuration.getRulbaseWriter(), true);
