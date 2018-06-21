@@ -484,6 +484,52 @@ public class ShowPackageTool {
             for (Layer threatLayer : threatLayers) {
                 showThreatRulebase(packageName, threatLayer);
             }
+
+            final Queue<String> objectsQueue = configuration.getNestedObjectsToRetrieve();
+            configuration.getLogger().info("There are " + objectsQueue.size() + " nested object(s) to retrieve (with limit " + LIMIT + ")");
+            while (!objectsQueue.isEmpty()) {
+
+                final Set<String> objectsToRetrieveChunk = new LinkedHashSet<>();
+                String uidFromQueue;
+                while (objectsToRetrieveChunk.size() < LIMIT && (uidFromQueue = objectsQueue.poll()) != null) {
+                    objectsToRetrieveChunk.add(uidFromQueue);
+                }
+
+                JSONObject payload = new JSONObject();
+
+                payload.put("limit", LIMIT);
+                payload.put("details-level", "full");
+
+                addNewFlagsToControlDetailsLevel(payload);
+
+                final JSONArray objectsFilter = new JSONArray();
+                objectsFilter.add("objId");
+                objectsFilter.addAll(objectsToRetrieveChunk);
+
+                payload.put("in", objectsFilter);
+
+                try {
+                    ApiResponse res = client.apiCall(loginResponse, "show-objects", payload);
+                    addObjectsInfoIntoCollections((JSONArray) res.getPayload().get("objects"));
+
+                    List<String> missingUids = new ArrayList<>();
+                    for (String uid : objectsToRetrieveChunk) {
+                        if (!configuration.getUidToName().containsKey(uid)) {
+                            missingUids.add(uid);
+                        }
+                    }
+
+                    configuration.getLogger().info(res.getPayload().get("total") + " objects were retrieved. New size of nested objects queue is " + objectsQueue.size());
+                    if (!missingUids.isEmpty()) {
+                        configuration.getLogger().info("There are " + missingUids.size() + " failed / non-object uid(s) " + missingUids.toString());
+                    }
+                }
+                catch (ApiClientException e) {
+                    handleException(e, "Failed to run show-objects");
+                }
+            }
+
+
             //Crete a Html page that contains the objects of the package
             writeDictionary(packageName);
 
@@ -1245,6 +1291,22 @@ public class ShowPackageTool {
                 name = object.get("name").toString();
             }
             uidToName.put(uid, name);
+
+            Object membersField = object.get("members");
+            if (membersField instanceof JSONArray) {
+                JSONArray members = (JSONArray) membersField;
+                for (Object member : members) {
+                    if (member instanceof JSONObject) {
+                        member = ((JSONObject) member).get("uid");
+                    }
+
+                    if (!(member instanceof String) || uidToName.containsKey(member)) {
+                        continue;
+                    }
+
+                    configuration.getNestedObjectsToRetrieve().offer((String) member);
+                }
+            }
 
             writeJSonObjectToFile(object, configuration.getObjectsWriter(), false);
         }

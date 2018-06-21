@@ -46,6 +46,15 @@
             width : auto;
         }
 
+        .object_link {
+            text-decoration: none;
+            color: blue;
+        }
+
+        .object_link:hover {
+            text-decoration: underline;
+        }
+
     </style>
     <script>
         // this part of the page is generated dynamically in the Java code by using the Check Point management APIs
@@ -55,22 +64,30 @@
         // end of dynamic content
     </script>
     <script>
-        var keysOrderArray = ["uid", "name", "type", "domain", "ipv4-address", "ipv6-address", "subnet4", "subnet-mask", "mask-length4", "subnet6", "mask-length6", "port"];
+        var objectsMap = {};
 
         var objects = {};
 
-			function filterObjects(arr, queryString) {
+        var keysOrderArray = ["uid", "name", "type", "domain", "ipv4-address", "ipv6-address", "subnet4", "subnet-mask", "mask-length4", "subnet6", "mask-length6", "port"];
+
+        function filterObjects(arr) {
+            var queryParams = getQueryParams();
             return arr.filter(function(obj) {
                 var keep = true;
-					if ( ("type" in obj) && ("type" in queryString) ) keep = (queryString["type"] == obj["type"]);
-					if ( (keep) && ("uid" in obj) && ("uid" in queryString) ) keep = (queryString["uid"] == obj["uid"]);
+                if ( ("type" in obj) && ("type" in queryParams) ) keep = (queryParams["type"] === obj["type"]);
+                if ( (keep) && ("uid" in obj) && ("uid" in queryParams) ) keep = (queryParams["uid"] === obj["uid"]);
                 return keep;
             });
         }
 
         function sortAndFilterObjects() {
-			var queryString = getQueryParams(document.location.search);
-			var filteredObjects = filterObjects(data,queryString);
+            data.forEach(function (o) {
+                if (o.uid) {
+                    objectsMap[o.uid] = o;
+                }
+            });
+
+            var filteredObjects = filterObjects(data);
             objects = filteredObjects.sort(function(a,b) {
                 if(a.type == null && b.type == null){ return 0}
                 if(a.type == null){ return 1}
@@ -93,12 +110,12 @@
             arr.forEach(function(elem, index) {
                 var rowElement = document.createElement("tr");
                 var indexElement = document.createElement("td");
-				var valueElement = document.createElement("td");
                 indexElement.className = "array_item";
                 indexElement.appendChild(document.createTextNode("#"+index.toString()));
-				valueElement.className = "object_value";
-				printObject(elem, valueElement, level+1);
                 rowElement.appendChild(indexElement);
+
+                var valueElement = document.createElement("td");
+                printChildElement(elem, valueElement, level);
                 rowElement.appendChild(valueElement);
                 tableElement.appendChild(rowElement);
             });
@@ -108,7 +125,7 @@
         function printObject(obj, parentObject, level) {
 
             if (typeof(obj) !== "object") {
-				parentObject.appendChild(document.createTextNode(obj.toString()));
+                parentObject.appendChild(generateValueNode(obj.toString()));
                 return;
             }
 
@@ -122,32 +139,35 @@
                 var bb = keysOrderArray.indexOf(b);
                 return aa !== -1 && bb !== -1 && aa - bb || aa !== -1 && -1 || bb !== -1 && 1 || a.localeCompare(b);
             }).forEach(function (key) {
-                var rowElement = document.createElement("tr");
+                 var rowElement = document.createElement("tr");
                 var keyElement = document.createElement("td");
-					var valueElement = document.createElement("td");
-					var valueOfKey = obj[key];
-					var typeOfValue = Object.prototype.toString.call((valueOfKey));
                 keyElement.className = "key";
                 keyElement.appendChild(document.createTextNode(key + ":"));
-
-				switch (typeOfValue) {
-                    case "[object Object]":
-                        valueElement.className = "object_value";
-                        printObject(valueOfKey, valueElement, level+1);
-                        break;
-                    case "[object Array]":
-                        valueElement.className = "object_value";
-                        printArray(valueOfKey, valueElement, level+1);
-                        break;
-                    default:
-                        valueElement.appendChild(document.createTextNode(valueOfKey));
-                }
                 rowElement.appendChild(keyElement);
-                rowElement.appendChild(valueElement);
-                tableElement.appendChild(rowElement);
-			});
 
-			parentObject.appendChild(tableElement);
+                var valueElement = document.createElement("td");
+                printChildElement(obj[key], valueElement, level);
+                rowElement.appendChild(valueElement);
+
+                tableElement.appendChild(rowElement);
+            });
+
+            parentObject.appendChild(tableElement);
+        }
+
+        function printChildElement (elem, parent, level) {
+            switch (Object.prototype.toString.call((elem))){
+                case "[object Object]":
+                    parent.className = "object_value";
+                    printObject(elem, parent, level + 1);
+                    break;
+                case "[object Array]":
+                    parent.className = "object_value";
+                    printArray(elem, parent, level + 1);
+                    break;
+                default:
+                    parent.appendChild(generateValueNode(elem));
+            }
         }
 
         function printObjectTitle(obj) {
@@ -163,20 +183,6 @@
             document.body.appendChild(anchor);
             document.body.appendChild(headline);
 
-        }
-
-        function getQueryParams(qs) {
-            qs = qs.split('+').join(' ');
-
-            var params = {},
-                tokens,
-                re = /[?&]?([^=]+)=([^&]*)/g;
-
-            while (tokens = re.exec(qs)) {
-                params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
-            }
-
-            return params;
         }
 
         function printAllObjects() {
@@ -195,6 +201,50 @@
 
                 previousType = obj.type;
             });
+        }
+
+        var isUUID = function () {
+            var uuidRegEx = RegExp("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", "i");
+            return function(str) {
+                return uuidRegEx.test(str);
+            }
+        }();
+
+        var getLinkBase = function () {
+            var linkBase = "./" + document.location.pathname.split("/").splice(-1,1) + "?uid=";
+            return function () {
+                return linkBase;
+            }
+        }();
+
+        var getQueryParams = function () {
+            var qs = document.location.search.split('+').join(' ');
+
+            var params = {},
+                tokens,
+                re = /[?&]?([^=]+)=([^&]*)/g;
+
+            while (tokens = re.exec(qs)) {
+                params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+            }
+
+            return function () {
+                return params;
+            };
+        }();
+
+        function generateValueNode(value) {
+            var valueNode;
+            if (isUUID(value) && objectsMap[value] && getQueryParams()["uid"] !== value) {
+                valueNode = document.createElement("a");
+                valueNode.className = "object_link";
+                valueNode.setAttribute("href", getLinkBase() + value);
+                valueNode.setAttribute("target", "_blank");
+                valueNode.appendChild(document.createTextNode(value));
+            } else {
+                valueNode = document.createTextNode(value)
+            }
+            return valueNode;
         }
 
     </script>

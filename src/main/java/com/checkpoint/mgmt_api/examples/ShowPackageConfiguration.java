@@ -67,6 +67,7 @@ enum ShowPackageConfiguration {
     private static Boolean dereferenceGroupMembers = null;
     private List<String> installedPackages       = new ArrayList<>();
     private static Map<String, String> uidToName = new HashMap<>();
+    private static Queue<String> nestedObjectsToRetrieve = new LinkedList<>();
     List<GatewayAndServer> gatewaysWithPolicy    = new ArrayList<>();
     private static Set<String> knownInlineLayers = new HashSet<>();
 
@@ -407,6 +408,11 @@ enum ShowPackageConfiguration {
     Map<String, String> getUidToName()
     {
         return uidToName;
+    }
+
+    Queue<String> getNestedObjectsToRetrieve()
+    {
+        return nestedObjectsToRetrieve;
     }
 
     String getTarGzPath()
