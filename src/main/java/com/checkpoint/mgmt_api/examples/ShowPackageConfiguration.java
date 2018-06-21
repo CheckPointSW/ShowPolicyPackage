@@ -74,8 +74,7 @@ enum ShowPackageConfiguration {
     private static final MyLogger logger = new MyLogger("MyLog", null);
     private FileHandler fileHandler;
 
-    /*Directory and paths settings*/
-    private static String templateDirectory  = "";
+    /*Paths settings*/
     private static String tarGzPath          = tarName;
     private static String resultFolderPath;
 
@@ -93,47 +92,15 @@ enum ShowPackageConfiguration {
         logger.setLevel(MyLevel.DEBUG);
 
         String debugString = resolveFlags(args);
-        //Set template path
-        setTemplatePath();
+
+        //Load html templates
+        htmlUtil.readTemplatesFromClassPath();
+
         //Set directory path
         setTarPath();
         configureLogFile(debugString);
         //Set the writer to the temps file
         setTempFilesWriter();
-    }
-
-    /**
-     * Set the template's directory path.
-     * If the path was passed as an argument and the folder exist then the function sets the path to
-     * be the given template directory path.
-     */
-    void setTemplatePath() throws Exception {
-
-        if (templateDirectory != null && !templateDirectory.isEmpty()) {
-
-            Path templateDirectoryPath = Paths.get(templateDirectory);
-
-            if (!Files.exists(templateDirectoryPath)) {
-                String errorMessage = "Provided template directory [" + templateDirectoryPath.toString() + "] does not exist!";
-                System.out.println(errorMessage);
-                throw new Exception(errorMessage);
-            }
-
-            // Check if the templates exists in the templates directory
-            if (!Files.exists(templateDirectoryPath.resolve(HtmlUtils.RULEBASE_HTML_TEMPLATE )) ||
-                    !Files.exists(templateDirectoryPath.resolve(HtmlUtils.INDEX_HTML_TEMPLATE )) ||
-                    !Files.exists(templateDirectoryPath.resolve(HtmlUtils.OBJECTS_HTML_TEMPLATE ))){
-                String errorMessage = "Template files: " + HtmlUtils.RULEBASE_HTML_TEMPLATE + ", " +
-                        HtmlUtils.INDEX_HTML_TEMPLATE + " and " + HtmlUtils.OBJECTS_HTML_TEMPLATE +
-                        " were not found in the directory: '" + templateDirectoryPath.toString() +"'.";
-                System.out.println(errorMessage);
-                throw new Exception(errorMessage);
-            }
-
-            htmlUtil.readTemplatesFromCustomDirectory(templateDirectoryPath);
-        } else {
-            htmlUtil.readTemplatesFromClassPath();
-        }
     }
 
     /**
@@ -861,29 +828,6 @@ enum ShowPackageConfiguration {
             String value(){
                 return " proxy-settings";
             }
-        },
-        templatePath("-t") {
-            void runCommand(String value)
-            {
-                templateDirectory = value;
-            }
-
-            void flagToString()
-            {
-                System.out.println(
-                        "\t[DEPRECATED]" +
-                                "\n\tCustom Template Path." +
-                                "\n\tPath where the custom templates are stored." +
-                                "\n\tThe default templates are bundled into the jar.");
-            }
-            String debugString()
-            {
-                return " templateDirectory:(-t)=" + templateDirectory;
-            }
-            String value(){
-                return " path";
-            }
-
         },
         debugInfo("-s") {
             void runCommand(String value)

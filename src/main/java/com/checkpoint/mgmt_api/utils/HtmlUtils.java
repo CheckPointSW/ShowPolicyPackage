@@ -383,26 +383,6 @@ public enum HtmlUtils {
         }
     }
 
-    /**
-     * This function returns an array containing the lines that are in a given path
-     *
-     * @param templatePath the path to be read from
-     *
-     * @return a list containing all of the lines in the file that are in a given path
-     */
-    private List<String> readHTMLTemplateLines(Path templatePath)
-    {
-        List<String> templateFile = null;
-        try {
-            templateFile = Files.readAllLines(templatePath, ENCODING);
-        }
-        catch (IOException e) {
-            System.out.println("Failed to read file" + templatePath.getFileName());
-        }
-
-        return templateFile;
-    }
-
     private List<String> readHTMLTemplateLines(InputStream in) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
             List<String> result = new ArrayList<>();
@@ -424,20 +404,13 @@ public enum HtmlUtils {
         this.resultFolderPath = resultFolderPath;
     }
 
-    public void readTemplatesFromCustomDirectory(Path customDir) {
-        for (String template : ALL_TEMPLATES) {
-            templatesMap.put(template, readHTMLTemplateLines(customDir.resolve(template)));
-        }
-    }
-
     public void readTemplatesFromClassPath() throws Exception {
         final ClassLoader cl = getClass().getClassLoader();
 
         for (String template : ALL_TEMPLATES) {
             try (InputStream in = cl.getResourceAsStream(TEMPLATES_NAMESPACE + "/" + template)) {
                 if (in == null) {
-                    String errorMessage = "Template [" + template + "] was not found in classpath." +
-                            "\nYou can specify a custom templates directory with '-t' flag.";
+                    String errorMessage = "Template [" + template + "] was not found in classpath.";
                     System.out.println(errorMessage);
                     throw new Exception(errorMessage);
                 }
