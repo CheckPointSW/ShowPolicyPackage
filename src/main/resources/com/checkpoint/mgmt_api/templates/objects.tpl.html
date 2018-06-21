@@ -4,46 +4,46 @@
     <title>Page Title</title>
     <style>
         body {
-            font-family: "Helvetica";
+            font-family: "Helvetica", sans-serif;
         }
 
         table {
             border-collapse: collapse;
-            font-family: "Courier";
-            border-style: hidden ;
-            width : 100%;
+            font-family: "Courier", monospace;
+            border-style: hidden;
+            width: 100%;
         }
 
         td {
-            border : 1px solid Gray;
+            border: 1px solid Gray;
             vertical-align: text-top;
-            padding : 6px;
+            padding: 6px;
         }
 
         .key {
-            color : DarkRed;
+            color: DarkRed;
             font-weight: bold;
         }
 
         .number_value {
-            color : DarkBlue;
+            color: DarkBlue;
         }
 
         .string_value {
-            color : Blue;
+            color: Blue;
         }
 
         .object_value {
-            padding: 0px;
+            padding: 0;
         }
 
         .array_item {
-            color : Green;
+            color: Green;
         }
 
         .main_table {
-            border : 1px solid gray;
-            width : auto;
+            border: 1px solid gray;
+            width: auto;
         }
 
         .object_link {
@@ -54,8 +54,8 @@
         .object_link:hover {
             text-decoration: underline;
         }
-
     </style>
+
     <script>
         // this part of the page is generated dynamically in the Java code by using the Check Point management APIs
 
@@ -63,6 +63,7 @@
 
         // end of dynamic content
     </script>
+
     <script>
         var objectsMap = {};
 
@@ -72,10 +73,10 @@
 
         function filterObjects(arr) {
             var queryParams = getQueryParams();
-            return arr.filter(function(obj) {
+            return arr.filter(function (obj) {
                 var keep = true;
-                if ( ("type" in obj) && ("type" in queryParams) ) keep = (queryParams["type"] === obj["type"]);
-                if ( (keep) && ("uid" in obj) && ("uid" in queryParams) ) keep = (queryParams["uid"] === obj["uid"]);
+                if (("type" in obj) && ("type" in queryParams)) keep = (queryParams["type"] === obj["type"]);
+                if ((keep) && ("uid" in obj) && ("uid" in queryParams)) keep = (queryParams["uid"] === obj["uid"]);
                 return keep;
             });
         }
@@ -88,10 +89,16 @@
             });
 
             var filteredObjects = filterObjects(data);
-            objects = filteredObjects.sort(function(a,b) {
-                if(a.type == null && b.type == null){ return 0}
-                if(a.type == null){ return 1}
-                if(b.type == null){ return -1}
+            objects = filteredObjects.sort(function (a, b) {
+                if (a.type == null && b.type == null) {
+                    return 0
+                }
+                if (a.type == null) {
+                    return 1
+                }
+                if (b.type == null) {
+                    return -1
+                }
                 return (a.type).localeCompare(b.type);
             });
         }
@@ -107,11 +114,11 @@
                 parentObject.appendChild(document.createTextNode(" [Empty array]"));
             }
             var tableElement = document.createElement("table");
-            arr.forEach(function(elem, index) {
+            arr.forEach(function (elem, index) {
                 var rowElement = document.createElement("tr");
                 var indexElement = document.createElement("td");
                 indexElement.className = "array_item";
-                indexElement.appendChild(document.createTextNode("#"+index.toString()));
+                indexElement.appendChild(document.createTextNode("#" + index.toString()));
                 rowElement.appendChild(indexElement);
 
                 var valueElement = document.createElement("td");
@@ -139,7 +146,7 @@
                 var bb = keysOrderArray.indexOf(b);
                 return aa !== -1 && bb !== -1 && aa - bb || aa !== -1 && -1 || bb !== -1 && 1 || a.localeCompare(b);
             }).forEach(function (key) {
-                 var rowElement = document.createElement("tr");
+                var rowElement = document.createElement("tr");
                 var keyElement = document.createElement("td");
                 keyElement.className = "key";
                 keyElement.appendChild(document.createTextNode(key + ":"));
@@ -155,8 +162,8 @@
             parentObject.appendChild(tableElement);
         }
 
-        function printChildElement (elem, parent, level) {
-            switch (Object.prototype.toString.call((elem))){
+        function printChildElement(elem, parent, level) {
+            switch (Object.prototype.toString.call((elem))) {
                 case "[object Object]":
                     parent.className = "object_value";
                     printObject(elem, parent, level + 1);
@@ -190,8 +197,7 @@
             document.title = "Package Objects";
             var previousType = "";
             objects.forEach(function (obj) {
-                if (obj.type !== previousType)
-                {
+                if (obj.type !== previousType) {
                     printHeadline(obj.type);
                 }
 
@@ -205,13 +211,13 @@
 
         var isUUID = function () {
             var uuidRegEx = RegExp("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", "i");
-            return function(str) {
+            return function (str) {
                 return uuidRegEx.test(str);
             }
         }();
 
         var getLinkBase = function () {
-            var linkBase = "./" + document.location.pathname.split("/").splice(-1,1) + "?uid=";
+            var linkBase = "./" + document.location.pathname.split("/").splice(-1, 1) + "?uid=";
             return function () {
                 return linkBase;
             }
@@ -246,8 +252,8 @@
             }
             return valueNode;
         }
-
     </script>
+
 </head>
 
 <body onload="printAllObjects()">

@@ -1,245 +1,246 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>Page Title</title>
-		<style>
-		body {
-			font-family: "Helvetica";
-		}
+<head>
+    <title>Page Title</title>
+    <style>
+        body {
+            font-family: "Helvetica", sans-serif;
+        }
 
-		table {
-			border-collapse: collapse;
-			border : 1px solid gray;
-			font-size : 80%;
-		}
+        table {
+            border-collapse: collapse;
+            border: 1px solid gray;
+            font-size: 80%;
+        }
 
-		td {
-			vertical-align: text-top;
-			padding : 6px;
-			border : 1px solid gray;
-		}
+        td {
+            vertical-align: text-top;
+            padding: 6px;
+            border: 1px solid gray;
+        }
 
-		th {
-			vertical-align: text-top;
-			padding : 6px;
-			border : 1px solid gray;
-			background-color: rgb(87,99,114);
-			font-weight : bold;
-			color : white;
-		}
+        th {
+            vertical-align: text-top;
+            padding: 6px;
+            border: 1px solid gray;
+            background-color: rgb(87, 99, 114);
+            font-weight: bold;
+            color: white;
+        }
 
-		.topic {
-			background-color: rgb(87,99,114);
-			font-weight : bold;
-			color : white;
-		}
+        .topic {
+            background-color: rgb(87, 99, 114);
+            font-weight: bold;
+            color: white;
+        }
 
-		.object_link {
-			text-decoration: none;
-			color: blue;
-		}
+        .object_link {
+            text-decoration: none;
+            color: blue;
+        }
 
-		.object_link:hover {
-			text-decoration: underline;
-		}
+        .object_link:hover {
+            text-decoration: underline;
+        }
 
-	
-		.disabled_rule .object_link {
-			color: darkgray;
-		}
+        .disabled_rule .object_link {
+            color: darkgray;
+        }
+    </style>
 
+    <script>
+        // this part of the page is generated dynamically in the Java code by using the Check Point management APIs
 
-		</style>
-		<script>
-			// this part of the page is generated dynamically in the Java code by using the Check Point management APIs
+        /*<%%>*/
 
-            /*<%%>*/
+        // end of dynamic content
+    </script>
 
-			// end of dynamic content
-		</script>
-		<script>
-			function drawTableColumnHeaders() {
-				var headerRow = document.getElementById("table_header_row");
+    <script>
+        function drawTableColumnHeaders() {
+            var headerRow = document.getElementById("table_header_row");
 
-				var th = document.createElement("th");
-				th.appendChild(document.createTextNode(""));
-				headerRow.appendChild(th);					
+            var th = document.createElement("th");
+            th.appendChild(document.createTextNode(""));
+            headerRow.appendChild(th);
 
-				data.policyPackages.forEach(function(entry){
-					var th = document.createElement("th");
-				    th.appendChild(document.createTextNode(entry.packageName));
-					headerRow.appendChild(th);					
-				});
-			}
+            data.policyPackages.forEach(function (entry) {
+                var th = document.createElement("th");
+                th.appendChild(document.createTextNode(entry.packageName));
+                headerRow.appendChild(th);
+            });
+        }
 
-			function drawLink (entry) {
-				var divElem = document.createElement("div");
-				var linkElem = document.createElement("a");
-				linkElem.className = "object_link";
-				linkElem.setAttribute("href", "./" + entry.htmlFileName);
-				linkElem.setAttribute("target", "_blank");
-				if (entry.domain != "Management server") {
-					linkElem.appendChild(document.createTextNode(entry.domain + " > " + entry.name));
-				}
-				else {
-					linkElem.appendChild(document.createTextNode(entry.name));
-				}
-				
-				divElem.appendChild(linkElem);
-				return divElem;
-			}
-			
-			function drawGatewayLink(htmlFileName, entry) {
-				var divElem = document.createElement("div");
-				var linkElem = document.createElement("a");
-				linkElem.className = "object_link";
-				linkElem.setAttribute("href", "./" + htmlFileName + "?uid=" + entry.uid);
-				linkElem.setAttribute("target", "_blank");
-				linkElem.appendChild(document.createTextNode(entry.name));
-				divElem.appendChild(linkElem);
-				return divElem;
-			}
-			
-			function drawObjectLink(entry) {
-				var divElem = document.createElement("div");
-				var linkElem = document.createElement("a");
-				linkElem.className = "object_link";
-				linkElem.setAttribute("href", "./" + entry["filename"] + "?type=" + entry.type);
-				linkElem.setAttribute("target", "_blank");
-				linkElem.appendChild(document.createTextNode(entry.type + " (" + entry.value +")"));
-				divElem.appendChild(linkElem);
-				return divElem;
-			}
-			
-			function drawTopic(topicName, topicDescription) {
-				var table = document.getElementById("table_body");
-				var row = document.createElement("tr");
-				var td_topic = document.createElement("td");
-				td_topic.appendChild(document.createTextNode(topicDescription));
-				td_topic.className = "topic";
-				row.appendChild(td_topic);
-				data.policyPackages.forEach(function(entry){
-					if (entry[topicName].constructor === Array) {
-						var td = document.createElement("td");
-						entry[topicName].forEach(function (subEntry){
-							td.appendChild(drawLink(subEntry));
-						});
-						row.appendChild(td);					
-					}
-					else
-					{
-						var td = document.createElement("td");
-						td.appendChild(drawLink(entry[topicName]));
-						row.appendChild(td);					
-					}
-				});
-				table.appendChild(row);
-			}
+        function drawLink(entry) {
+            var divElem = document.createElement("div");
+            var linkElem = document.createElement("a");
+            linkElem.className = "object_link";
+            linkElem.setAttribute("href", "./" + entry.htmlFileName);
+            linkElem.setAttribute("target", "_blank");
+            if (entry.domain != "Management server") {
+                linkElem.appendChild(document.createTextNode(entry.domain + " > " + entry.name));
+            }
+            else {
+                linkElem.appendChild(document.createTextNode(entry.name));
+            }
 
-			function drawGateways() {
-				var table = document.getElementById("table_body");
-				var row = document.createElement("tr");
-				var td_topic = document.createElement("td");
-				td_topic.appendChild(document.createTextNode("Gateways running this policy package"));
-				td_topic.className = "topic";
-				row.appendChild(td_topic);
-				data.policyPackages.forEach(function(policPackage){
-					var td = document.createElement("td");
-					policPackage["gatewayAndServerList"].forEach(function (gwEntry){
-						td.appendChild(drawGatewayLink(policPackage["htmlGatewaysFileName"],gwEntry));
-					});
-					row.appendChild(td);					
-				});
-				table.appendChild(row);
-			}
-			
-			function drawObjects() {
-				var table = document.getElementById("table_body");
-				var row = document.createElement("tr");
-				var td_topic = document.createElement("td");
-				td_topic.appendChild(document.createTextNode("Objects"));
-				td_topic.className = "topic";
-				row.appendChild(td_topic);
-				var objects = {};
-				var all_keys = [];
-				
-				data.policyPackages.forEach(function(policPackage){
-					for (var key in policPackage["objects"]["types"]) {
-						if (!(key in objects)) {
-							objects[key] = [];
-							all_keys.push(key);
-						}
-						var objData = {"packageName" : policPackage["packageName"], "filename" : policPackage["objects"]["htmlObjectsFileName"], "type" : key, "value" : policPackage["objects"]["types"][key]};
-						objects[key].push(objData);
-					}
-				});
-				
-				all_keys.sort( function(a, b) {
-					if (a.toLowerCase() < b.toLowerCase()) return -1;
-					if (a.toLowerCase() > b.toLowerCase()) return 1;
-					return 0;
-				});
-				
-				data.policyPackages.forEach(function(policPackage){
-					var td = document.createElement("td");
-					for (var i=0; i<all_keys.length; i++) {
-						var key = all_keys[i];
+            divElem.appendChild(linkElem);
+            return divElem;
+        }
 
-						//If the curernt object type doesn't belong to this package, don't show it.
-                        if (Object.keys(policPackage["objects"]["types"]).indexOf(key) == -1) {
-                            continue;
+        function drawGatewayLink(htmlFileName, entry) {
+            var divElem = document.createElement("div");
+            var linkElem = document.createElement("a");
+            linkElem.className = "object_link";
+            linkElem.setAttribute("href", "./" + htmlFileName + "?uid=" + entry.uid);
+            linkElem.setAttribute("target", "_blank");
+            linkElem.appendChild(document.createTextNode(entry.name));
+            divElem.appendChild(linkElem);
+            return divElem;
+        }
+
+        function drawObjectLink(entry) {
+            var divElem = document.createElement("div");
+            var linkElem = document.createElement("a");
+            linkElem.className = "object_link";
+            linkElem.setAttribute("href", "./" + entry["filename"] + "?type=" + entry.type);
+            linkElem.setAttribute("target", "_blank");
+            linkElem.appendChild(document.createTextNode(entry.type + " (" + entry.value + ")"));
+            divElem.appendChild(linkElem);
+            return divElem;
+        }
+
+        function drawTopic(topicName, topicDescription) {
+            var table = document.getElementById("table_body");
+            var row = document.createElement("tr");
+            var td_topic = document.createElement("td");
+            td_topic.appendChild(document.createTextNode(topicDescription));
+            td_topic.className = "topic";
+            row.appendChild(td_topic);
+            data.policyPackages.forEach(function (entry) {
+                var td = document.createElement("td");
+
+                if (entry[topicName].constructor === Array) {
+                    entry[topicName].forEach(function (subEntry) {
+                        td.appendChild(drawLink(subEntry));
+                    });
+                }
+                else {
+                    td.appendChild(drawLink(entry[topicName]));
+                }
+
+                row.appendChild(td);
+            });
+            table.appendChild(row);
+        }
+
+        function drawGateways() {
+            var table = document.getElementById("table_body");
+            var row = document.createElement("tr");
+            var td_topic = document.createElement("td");
+            td_topic.appendChild(document.createTextNode("Gateways running this policy package"));
+            td_topic.className = "topic";
+            row.appendChild(td_topic);
+            data.policyPackages.forEach(function (policPackage) {
+                var td = document.createElement("td");
+                policPackage["gatewayAndServerList"].forEach(function (gwEntry) {
+                    td.appendChild(drawGatewayLink(policPackage["htmlGatewaysFileName"], gwEntry));
+                });
+                row.appendChild(td);
+            });
+            table.appendChild(row);
+        }
+
+        function drawObjects() {
+            var table = document.getElementById("table_body");
+            var row = document.createElement("tr");
+            var td_topic = document.createElement("td");
+            td_topic.appendChild(document.createTextNode("Objects"));
+            td_topic.className = "topic";
+            row.appendChild(td_topic);
+            var objects = {};
+            var all_keys = [];
+
+            data.policyPackages.forEach(function (policPackage) {
+                for (var key in policPackage["objects"]["types"]) {
+                    if (!(key in objects)) {
+                        objects[key] = [];
+                        all_keys.push(key);
+                    }
+                    var objData = {
+                        "packageName": policPackage["packageName"],
+                        "filename": policPackage["objects"]["htmlObjectsFileName"],
+                        "type": key,
+                        "value": policPackage["objects"]["types"][key]
+                    };
+                    objects[key].push(objData);
+                }
+            });
+
+            all_keys.sort(function (a, b) {
+                if (a.toLowerCase() < b.toLowerCase()) return -1;
+                if (a.toLowerCase() > b.toLowerCase()) return 1;
+                return 0;
+            });
+
+            data.policyPackages.forEach(function (policPackage) {
+                var td = document.createElement("td");
+                for (var i = 0; i < all_keys.length; i++) {
+                    var key = all_keys[i];
+
+                    //If the curernt object type doesn't belong to this package, don't show it.
+                    if (Object.keys(policPackage["objects"]["types"]).indexOf(key) === -1) {
+                        continue;
+                    }
+
+                    var found = false;
+                    objects[key].forEach(function (objData) {
+                        if (policPackage["packageName"] == objData["packageName"]) {
+                            found = true;
+                            td.appendChild(drawObjectLink(objData));
                         }
+                    });
+                    if (!found) {
+                        var divElem = document.createElement("div");
+                        divElem.appendChild(document.createTextNode(key + " (0)"));
+                        td.appendChild(divElem);
+                    }
+                }
+                row.appendChild(td);
+            });
+            table.appendChild(row);
+        }
 
-						var found = false;
-						objects[key].forEach(function (objData) {
-							if (policPackage["packageName"] == objData["packageName"]) {
-								found = true;
-								td.appendChild(drawObjectLink(objData));
-							}
-						});
-						if (!found) {
-							var divElem = document.createElement("div");
-							divElem.appendChild(document.createTextNode(key + " (0)"));
-							td.appendChild(divElem);
-						}
-					}
-					row.appendChild(td);
-				});
-				table.appendChild(row);
-			}
-			
-			
-			function drawIndex() {
-				document.title = "Show Package"
-				if (data.domain !="" ) {
-					document.getElementById("domain").innerHTML = "Domain: "+ data.domain;
-				}
-				drawTableColumnHeaders();
-				drawTopic("accessLayers", "Access Policy Layers");
-				drawTopic("natLayer", "NAT");
-				drawTopic("threatLayers", "Threat Prevention Layers");
-				drawGateways();
-				drawObjects();
-				
-			}
-			
-		
-		</script>
-	</head>
-	
-	<body onload="drawIndex()">
-	  <h3>
-	     <div id="domain"></div>
-	  </h3>
-	  
-	  <table>
-		<thead>
-		  <tr id="table_header_row">
-		  <tr>
-		</thead>
-		<tbody id="table_body">
-		</tbody>
-	  </table>
-	</body>
+        function drawIndex() {
+            document.title = "Show Package";
+            if (data.domain) {
+                document.getElementById("domain").innerHTML = "Domain: " + data.domain;
+            }
+            drawTableColumnHeaders();
+            drawTopic("accessLayers", "Access Policy Layers");
+            drawTopic("natLayer", "NAT");
+            drawTopic("threatLayers", "Threat Prevention Layers");
+            drawGateways();
+            drawObjects();
+
+        }
+    </script>
+
+</head>
+
+<body onload="drawIndex()">
+    <h3>
+        <div id="domain"></div>
+    </h3>
+
+    <table>
+        <thead>
+            <tr id="table_header_row">
+            <tr>
+        </thead>
+        <tbody id="table_body">
+        </tbody>
+    </table>
+</body>
 </html>
 
