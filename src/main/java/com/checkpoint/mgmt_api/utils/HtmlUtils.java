@@ -131,9 +131,9 @@ public enum HtmlUtils {
     public static final String TEMPLATES_NAMESPACE = "com/checkpoint/mgmt_api/templates";
 
     //Template file names
-    public static final String RULEBASE_HTML_TEMPLATE = "rulebase.html.template";
-    public static final String OBJECTS_HTML_TEMPLATE  = "objects.html.template";
-    public static final String INDEX_HTML_TEMPLATE    = "index.html.template";
+    public static final String RULEBASE_HTML_TEMPLATE = "rulebase.tpl.html";
+    public static final String OBJECTS_HTML_TEMPLATE  = "objects.tpl.html";
+    public static final String INDEX_HTML_TEMPLATE    = "index.tpl.html";
 
     public static final String[] ALL_TEMPLATES = new String[]{INDEX_HTML_TEMPLATE, OBJECTS_HTML_TEMPLATE, RULEBASE_HTML_TEMPLATE};
 
