@@ -116,10 +116,14 @@
 
 		</style>
 		<script>
-        <%%>
+            // this part of the page is generated dynamically in the Java code by using the Check Point management APIs
+
+			/*<%%>*/
+
 			// end of dynamic content
-		var firstAccessRule = data.find(function(e) {return e.type === "access-rule"});
-		var showHitCount = !!(firstAccessRule && firstAccessRule.hits);
+
+			var firstAccessRule = data.find(function(e) {return e.type === "access-rule"});
+			var showHitCount = !!(firstAccessRule && firstAccessRule.hits);
 		</script>
 		<script>
 			var accessColumnHeaders = ["No.","Name", "Source", "Destination", "VPN", "Service/Application", getDataHeader(), "Action", "Track", "Time", "Install-On", "Comments"];

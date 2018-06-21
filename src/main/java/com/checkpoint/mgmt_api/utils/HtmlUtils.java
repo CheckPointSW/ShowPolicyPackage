@@ -143,7 +143,7 @@ public enum HtmlUtils {
     private static final String RULEBASE_FILE = "rulebase.txt";
 
     //Format of place holder in template files
-    private static final String TEMPLATE_PLACE_HOLDER  = "<%%>";//"<% dynamic content here %>";
+    private static final String TEMPLATE_PLACE_HOLDER  = "/*<%%>*/";
 
     //Suffix
     private static final String HTML_SUFFIX   = ".html";
@@ -374,7 +374,7 @@ public enum HtmlUtils {
         for(String templateLine : objectsHTMLTemplate) {
             if(templateLine.contains(TEMPLATE_PLACE_HOLDER)) {
                 String stringToReplace = "var data = " + replaceString + ";\n";
-                htmlWriter.println(templateLine.replaceAll(TEMPLATE_PLACE_HOLDER, stringToReplace));
+                htmlWriter.println(templateLine.replace(TEMPLATE_PLACE_HOLDER, stringToReplace));
                 jsonWriter.println(replaceString);
             }
             else{
