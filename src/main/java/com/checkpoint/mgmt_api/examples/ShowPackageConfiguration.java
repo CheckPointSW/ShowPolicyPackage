@@ -40,13 +40,13 @@ enum ShowPackageConfiguration {
     /*Set the names of the tar and log files*/
     private static final String tarName;
     private static final String logFileName;
-
     static {
         SimpleDateFormat formatDate = new SimpleDateFormat("YYYY-MM-dd_HH-mm-ss");
         String date  = formatDate.format(new Date());
         tarName      = PREFIX + date + TAR_SUFFIX;
         logFileName  = PREFIX + date + LOG_SUFFIX;
     }
+
 
     /*Login credentials*/
     private static String username;
@@ -63,30 +63,34 @@ enum ShowPackageConfiguration {
     private static String userRequestGateway;
     private static String userRequestPackage;
     private static boolean showRulesHitCounts    = false;
+
+    private static Integer queryLimit            = null;
+
+    private static final int DEFAULT_QUERY_LIMIT = 10;
     private static Boolean showMembership        = null;
+
     private static Boolean dereferenceGroupMembers = null;
     private List<String> installedPackages       = new ArrayList<>();
     private static Map<String, String> uidToName = new HashMap<>();
     private static Queue<String> nestedObjectsToRetrieve = new LinkedList<>();
     List<GatewayAndServer> gatewaysWithPolicy    = new ArrayList<>();
     private static Set<String> knownInlineLayers = new HashSet<>();
-
     /*Logger settings*/
+
     private static final MyLogger logger = new MyLogger("MyLog", null);
     private FileHandler fileHandler;
-
     /*Paths settings*/
+
     private static String tarGzPath          = tarName;
     private static String resultFolderPath;
-
     //Define if the function needs only to show the existing packages
+
     private static boolean showPackagesList = false;
     private static String proxy             = "";
     private HtmlUtils htmlUtil              = HtmlUtils.INSTANCE;
-
     private static RandomAccessFile objectsWriter;
-    private static RandomAccessFile rulbaseWriter;
 
+    private static RandomAccessFile rulbaseWriter;
     void initializeParameters(String[] args) throws Exception{
 
         //Default debug level
@@ -507,6 +511,11 @@ enum ShowPackageConfiguration {
         return resultFolderPath;
     }
 
+    public Integer getQueryLimit()
+    {
+        return queryLimit == null ? DEFAULT_QUERY_LIMIT : queryLimit;
+    }
+
     public boolean showRulesHitCounts() { return showRulesHitCounts; }
 
     public Boolean getShowMembership()
@@ -761,6 +770,42 @@ enum ShowPackageConfiguration {
             String debugString()
             {
                 return "showRulesHitCounts:(-c)=" + showRulesHitCounts;
+            }
+        },
+        queryLimit("--query-limit") {
+            void runCommand(String limitString)
+            {
+                final Integer limit;
+
+                try {
+                    limit = Integer.valueOf(limitString);
+                    if (limit < 1 || limit > 500) {
+                        throw new IllegalArgumentException();
+                    }
+                }
+                catch (IllegalArgumentException e) {
+                    final String errorMessage = "The value of --query-limit must be an integer in range from 1 to 500";
+                    System.out.println(errorMessage);
+                    throw new IllegalArgumentException(errorMessage);
+                }
+
+                ShowPackageConfiguration.queryLimit = limit;
+            }
+
+            void flagToString()
+            {
+                System.out.println("\tNo more than that many results will be returned on each call." +
+                        "\n\tIncrease the limit to get a faster execution (because of less number of calls in total)" +
+                        "\n\tDecrease the limit when your calls are hitting the timeout (e.g. when your rulebase is huge and complex)" +
+                        "\n\tThe limit must be in range from 1 to 500" +
+                        "\n\tDefault {" + DEFAULT_QUERY_LIMIT + "}");
+            }
+            String debugString()
+            {
+                return "queryLimit:(--query-limit)=" + ShowPackageConfiguration.queryLimit;
+            }
+            String value(){
+                return " limit";
             }
         },
         showMembershipOption("--show-membership") {

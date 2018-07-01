@@ -51,9 +51,6 @@ public class ShowPackageTool {
         }
     }
 
-    //Constants
-    private static final int LIMIT = 10;
-
     private static ShowPackageConfiguration configuration = ShowPackageConfiguration.INSTANCE;
     private static ApiClient client;
     private static ApiLoginResponse loginResponse;
@@ -122,9 +119,9 @@ public class ShowPackageTool {
 
         /*Create an Api client and verify the server's fingerprint*/
         client = new ApiClient(apiClientArgs);
-        client.setLimitQuery(LIMIT);
+        client.setLimitQuery(configuration.getQueryLimit());
 
-        configuration.getLogger().debug("Limit number of object per page: " + LIMIT);
+        configuration.getLogger().debug("Limit number of object per page: " + configuration.getQueryLimit());
 
         /*Check if the connection is to the local server*/
         boolean loginAsRoot = isLoginAsRoot();
@@ -486,18 +483,18 @@ public class ShowPackageTool {
             }
 
             final Queue<String> objectsQueue = configuration.getNestedObjectsToRetrieve();
-            configuration.getLogger().info("There are " + objectsQueue.size() + " nested object(s) to retrieve (with limit " + LIMIT + ")");
+            configuration.getLogger().info("There are " + objectsQueue.size() + " nested object(s) to retrieve (with limit " + configuration.getQueryLimit() + ")");
             while (!objectsQueue.isEmpty()) {
 
                 final Set<String> objectsToRetrieveChunk = new LinkedHashSet<>();
                 String uidFromQueue;
-                while (objectsToRetrieveChunk.size() < LIMIT && (uidFromQueue = objectsQueue.poll()) != null) {
+                while (objectsToRetrieveChunk.size() < configuration.getQueryLimit() && (uidFromQueue = objectsQueue.poll()) != null) {
                     objectsToRetrieveChunk.add(uidFromQueue);
                 }
 
                 JSONObject payload = new JSONObject();
 
-                payload.put("limit", LIMIT);
+                payload.put("limit", configuration.getQueryLimit());
                 payload.put("details-level", "full");
 
                 addNewFlagsToControlDetailsLevel(payload);
@@ -716,7 +713,7 @@ public class ShowPackageTool {
         ApiResponse res;
 
         int totalObjects = 0;
-        int limit = LIMIT;
+        int limit = configuration.getQueryLimit();
 
         Set<Layer> inlineLayers = new HashSet<>();
 
@@ -863,7 +860,7 @@ public class ShowPackageTool {
         int iterations   = 0;
         int receivedObjects;
         int totalObjects = 0;
-        int limit = LIMIT;
+        int limit = configuration.getQueryLimit();
 
         configuration.getLogger().info("Starting handling threat layer: '" + threatLayer.getName() + "'");
         configuration.getLogger().debug("Run command: 'show-threat-rulebase' for rulebase: '" + threatLayer.getUid()
