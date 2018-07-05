@@ -119,9 +119,14 @@
 
         // end of dynamic content
 
-        var firstAccessRule = data.find(function (e) {
-            return e.type === "access-rule"
-        });
+        var firstAccessRule;
+        for (var i in data) {
+            if (data[i].type === "access-rule") {
+                firstAccessRule = data[i];
+                break;
+            }
+        }
+
         var showHitCount = !!(firstAccessRule && firstAccessRule.hits);
     </script>
 
