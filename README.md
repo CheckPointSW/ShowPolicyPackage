@@ -48,7 +48,7 @@ This flag is supported from R80.10 Jumbo HF take 70
 • [--dereference-group-members (true|false)] (Optional): Whether to dereference group members.
 This flag is supported from R80.10 Jumbo HF take 70
 
-• [--query-limit limit] (Optional): The objects query limit. No more than that many results will be returned.
+• [--query-limit limit] (Optional): The objects query limit. No more than that many results will be returned.  
 Minimum value is 1, maximum value is 500. Default value is 10.
 
 Use "--version" option to print the version of the tool
