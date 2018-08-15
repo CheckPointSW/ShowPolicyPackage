@@ -34,6 +34,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.logging.Handler;
 
 /**
@@ -55,6 +56,8 @@ public class ShowPackageTool {
     private static ApiClient client;
     private static ApiLoginResponse loginResponse;
     private static JSONObject allTypes = null;
+
+    private static final int NUMBER_OF_EXECUTORS = 2;
 
     private static final String TYPE      = "type";
     private static final String UNDEFINED = "undefined";
@@ -749,22 +752,42 @@ public class ShowPackageTool {
         }
 
         if (totalObjects > 0) {
-            int offset = 0;
+            final ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_OF_EXECUTORS);
+            List<Callable<ApiResponse>> tasks = new ArrayList<>(totalObjects / limit);
 
-            List<JSONObject> chunks = new ArrayList<>(totalObjects / limit);
+            int offset = 0;
             while (offset < totalObjects) {
                 JSONObject payload = new JSONObject(payloadTemplate);
                 payload.put("offset", offset);
                 payload.put("limit", limit);
-                chunks.add(payload);
+                tasks.add(new ApiCallTask(command, payload));
 
                 offset += limit;
             }
 
             try {
+                configuration.getLogger().debug("Command [" + command + "] uid " + payloadTemplate.get("uid")
+                        + " : Starting execution of " + tasks.size() + " tasks (with " + NUMBER_OF_EXECUTORS + " executor(s))");
+
+                final List<Future<ApiResponse>> futures = executorService.invokeAll(tasks);
+                executorService.shutdown();
+
+                boolean serviceTerminatedSuccessfully = executorService.awaitTermination(3, TimeUnit.HOURS);
+
+                if (!serviceTerminatedSuccessfully) {
+                    configuration.getLogger().severe("Failed to run show rulebase (" + layer.getName() + "). Timeout after 3 hours.");
+                    configuration.getLogger().debug("Following the error, creating an empty html file for layer: '"
+                            + layer.getName() + "'");
+                    writeRulebase(layer.getName(), packageName, rulebaseType, layer.getDomain(), inlineLayers, true);
+                    return false;
+                }
+
+                configuration.getLogger().debug("Command [" + command + "] uid " + payloadTemplate.get("uid") + " : Finished execution of " + tasks.size() + " tasks");
+
                 JSONArray rulebases = new JSONArray();
-                for (JSONObject chunk : chunks) {
-                    res = client.apiCall(loginResponse, command, chunk);
+
+                for (Future<ApiResponse> f : futures) {
+                    res = f.get();
 
                     JSONArray jsonArrayOfObjectDictionary = (JSONArray)res.getPayload().get("objects-dictionary");
                     addObjectsInfoIntoCollections(jsonArrayOfObjectDictionary);
@@ -786,7 +809,6 @@ public class ShowPackageTool {
                             // firstNew is deleted
                             currentRulebase.remove(0);
                         }
-
                     }
 
                     rulebases.addAll(currentRulebase);
@@ -806,7 +828,7 @@ public class ShowPackageTool {
 
                 inlineLayers.addAll(addRulebase(rulebases, types, rulebaseType));
             }
-            catch (ApiClientException e) {
+            catch (InterruptedException | ExecutionException e) {
                 handleException(e, "Failed to run show rulebase (" + layer.getName() + ")");
                 configuration.getLogger().debug("Following the error, creating an empty html file for layer: '"
                         + layer.getName() + "'");
@@ -815,10 +837,10 @@ public class ShowPackageTool {
             }
         }
 
-
         configuration.getLogger().debug("Found " + totalObjects + " rules in : '" + layer.getName() + "'");
         configuration.getLogger().debug("Found " + inlineLayers.size() + " inline layer(s)");
         configuration.getLogger().debug("Creating html file for layer: '" + layer.getName() + "'");
+
         boolean writeRulebaseResult = writeRulebase(layer.getName(), packageName, rulebaseType,
                 layer.getDomain(), inlineLayers, false);
 
@@ -840,6 +862,7 @@ public class ShowPackageTool {
                 configuration.getLogger().warning("Failed to create inline-layer, name: '" + inlineLayer.getName() + "'");
             }
         }
+
         configuration.getLogger().info("Done handling rulebase '" + layer.getName() + "'");
 
         return writeRulebaseResult;
@@ -1623,7 +1646,37 @@ public class ShowPackageTool {
             handle.close();
         }
     }
+
+    private static class ApiCallTask implements Callable<ApiResponse> {
+
+        private JSONObject payload;
+        private String command;
+
+        ApiCallTask(String command, JSONObject payload)
+        {
+            this.payload = payload;
+            this.command = command;
+        }
+
+        @Override
+        public ApiResponse call()
+        {
+            ApiResponse res;
+            try {
+                res = client.apiCall(loginResponse, command, payload);
+            }
+            catch (Exception e) {
+                res = null;
+            }
+
+            if (res == null || !res.isSuccess()) {
+                res = null;
+            }
+
+            String log = "Command [" + command + "] uid " + payload.get("uid") + " limit " + payload.get("limit") + " offset " + payload.get("offset") + " ";
+            configuration.getLogger().debug(log + (res == null ? "FAILED" : "SUCCESSFUL"));
+
+            return res;
+        }
+    }
 }
-
-
-
