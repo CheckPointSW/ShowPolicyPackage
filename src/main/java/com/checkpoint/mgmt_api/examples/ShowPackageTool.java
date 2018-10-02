@@ -67,6 +67,10 @@ public class ShowPackageTool {
     private static String[] natTypes    = {"nat-section", "nat-rule", "place-holder"};
     private static String[] threatTypes = {"threat-section", "threat-exception", "place-holder"};
 
+    // Object fields that contains nested objects
+    private static final String[] OBJECT_FIELDS_CONTAINING_NESTED_OBJECTS = {"except", "include", "location"};
+    private static final String[] COLLECTION_FIELDS_CONTAINING_NESTED_OBJECTS = {"members", "networks"};
+
     private enum RulebaseType {
 
         ACCESS ("access"),
@@ -992,7 +996,7 @@ public class ShowPackageTool {
 
             JSONObject rule = (JSONObject) ruleObject;
             if ("threat-rule".equalsIgnoreCase(rule.get("type").toString())) {
-                writeJSonObjectToFile(rule, configuration.getRulbaseWriter(), true);
+                writeJsonObjectToFile(rule, configuration.getRulbaseWriter(), true);
                 String ruleUid = rule.get("uid").toString();
 
                 JSONObject exceptionRulebase = showThreatExceptionRulebase(threatLayer, ruleUid);
@@ -1007,7 +1011,7 @@ public class ShowPackageTool {
                 addObjectsInfoIntoCollections(objects);
             }
             else if ("place-holder".equalsIgnoreCase(rule.get("type").toString())) {
-                writeJSonObjectToFile(rule, configuration.getRulbaseWriter(),true);
+                writeJsonObjectToFile(rule, configuration.getRulbaseWriter(), true);
             }
             else {
                 configuration.getLogger().severe("Unsupported type: " + rule.get("type").toString());
@@ -1210,12 +1214,12 @@ public class ShowPackageTool {
                 // We remove the section rules here to prevent duplication
                 // The rules are added later following the section (to get a flat view)
                 JSONArray jsonArrayOfRules = (JSONArray) rule.remove("rulebase");
-                writeJSonObjectToFile(rule, configuration.getRulbaseWriter(), true);
+                writeJsonObjectToFile(rule, configuration.getRulbaseWriter(), true);
 
                 if (jsonArrayOfRules != null && jsonArrayOfRules.size() > 0) {
                     for (Object jsonArrayOfRule : jsonArrayOfRules) {
                         JSONObject jsonObject = (JSONObject) jsonArrayOfRule;
-                        writeJSonObjectToFile(jsonObject, configuration.getRulbaseWriter(), true);
+                        writeJsonObjectToFile(jsonObject, configuration.getRulbaseWriter(), true);
                         //Check existence of the inline-layer
                         if (rulebaseType == RulebaseType.ACCESS && jsonObject.get("inline-layer") != null) {
                             Layer inlineLayer = createInlineLayer(jsonObject.get("inline-layer").toString());
@@ -1231,7 +1235,7 @@ public class ShowPackageTool {
             else if (types[1].equalsIgnoreCase(rule.get("type").toString()) ||
                     types[2].equalsIgnoreCase(rule.get("type").toString())) {
 
-                writeJSonObjectToFile(rule, configuration.getRulbaseWriter(), true);
+                writeJsonObjectToFile(rule, configuration.getRulbaseWriter(), true);
 
                 //Check existence of the inline-layer
                 if (rulebaseType == RulebaseType.ACCESS && rule.get("inline-layer") != null) {
@@ -1312,23 +1316,66 @@ public class ShowPackageTool {
             }
             uidToName.put(uid, name);
 
-            Object membersField = object.get("members");
-            if (membersField instanceof JSONArray) {
-                JSONArray members = (JSONArray) membersField;
+            addNestedObjectsFromCollections(object);
+            addOtherNestedObjects(object);
+
+            writeJsonObjectToFile(object, configuration.getObjectsWriter(), false);
+        }
+    }
+
+    /**
+     * If the input object has fields that contain nested objects, adds them
+     * to the objects to dereference queue.
+     *
+     * @param object the object contains nested objects
+     */
+    private static void addOtherNestedObjects(JSONObject object)
+    {
+        for (String field : OBJECT_FIELDS_CONTAINING_NESTED_OBJECTS) {
+            Object fieldWithNestedObjects = object.get(field);
+
+            if (fieldWithNestedObjects != null) {
+                addNestedObjectToQueue(fieldWithNestedObjects);
+            }
+        }
+    }
+
+    /**
+     * If the input object has collections that contain nested objects, adds them
+     * to the objects to dereference queue.
+     *
+     * @param object the object contains nested objects
+     */
+    private static void addNestedObjectsFromCollections(JSONObject object)
+    {
+        for (String field : COLLECTION_FIELDS_CONTAINING_NESTED_OBJECTS) {
+            Object fieldContainMembers = object.get(field);
+
+            if (fieldContainMembers != null && fieldContainMembers instanceof JSONArray) {
+                JSONArray members = (JSONArray) fieldContainMembers;
+
                 for (Object member : members) {
-                    if (member instanceof JSONObject) {
-                        member = ((JSONObject) member).get("uid");
-                    }
-
-                    if (!(member instanceof String) || uidToName.containsKey(member)) {
-                        continue;
-                    }
-
-                    configuration.getNestedObjectsToRetrieve().offer((String) member);
+                    addNestedObjectToQueue(member);
                 }
             }
+        }
+    }
 
-            writeJSonObjectToFile(object, configuration.getObjectsWriter(), false);
+
+    /**
+     * This function add specific nested object to the objects to dereference queue.
+     *
+     * @param nestedObject the object contains nested objects
+     */
+    private static void addNestedObjectToQueue(Object nestedObject)
+    {
+        // Input nestedObject could be a JsonObject or a UID string
+        if (nestedObject instanceof JSONObject) {
+            nestedObject = ((JSONObject) nestedObject).get("uid");
+        }
+
+        if ((nestedObject instanceof String) && !(configuration.getUidToName().containsKey(nestedObject))) {
+            configuration.getNestedObjectsToRetrieve().offer((String) nestedObject);
         }
     }
 
@@ -1339,7 +1386,7 @@ public class ShowPackageTool {
      * @param rulbase true if the file is rulebases file
      * @return true on success, otherwise false
      */
-    private static boolean writeJSonObjectToFile(JSONObject object,RandomAccessFile fileWriter, boolean rulbase){
+    private static boolean writeJsonObjectToFile(JSONObject object, RandomAccessFile fileWriter, boolean rulbase){
 
         if (!rulbase) {
             String type;
