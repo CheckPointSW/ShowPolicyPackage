@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class IndexView
 {
+    private String publishedSessionUid;
     private String domain;
     private List<PolicyPackage> policyPackages = new ArrayList<>();
 
@@ -33,6 +34,16 @@ public class IndexView
         return policyPackages;
     }
 
+    public String getPublishedSessionUid()
+    {
+        return publishedSessionUid;
+    }
+
+    public void setPublishedSessionUid(String publishedSessionUid)
+    {
+        this.publishedSessionUid = publishedSessionUid;
+    }
+
     /**
      * Util function.
      * Creates a json object that represent the class.
@@ -43,6 +54,7 @@ public class IndexView
 
         JSONObject jsonIndex = new JSONObject();
 
+        jsonIndex.put("published-session-uid",publishedSessionUid);
         jsonIndex.put("domain",domain);
         JSONArray policy = new JSONArray();
         for( PolicyPackage policyPackage : policyPackages){
