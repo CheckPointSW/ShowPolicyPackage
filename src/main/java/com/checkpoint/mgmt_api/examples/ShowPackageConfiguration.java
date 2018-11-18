@@ -75,6 +75,7 @@ enum ShowPackageConfiguration {
     private static Queue<String> nestedObjectsToRetrieve = new LinkedList<>();
     List<GatewayAndServer> gatewaysWithPolicy    = new ArrayList<>();
     private static Set<String> knownInlineLayers = new HashSet<>();
+    private static String publishedSessionUid;
     /*Logger settings*/
 
     private static final MyLogger logger = new MyLogger("MyLog", null);
@@ -504,6 +505,10 @@ enum ShowPackageConfiguration {
     public boolean isKnownInlineLayer(String knownInlineLayer){
         return knownInlineLayers.contains(knownInlineLayer);
 
+    }
+
+    public String getPublishedSessionUid() {
+        return publishedSessionUid;
     }
 
     public String getResultFolderPath()
@@ -948,6 +953,31 @@ enum ShowPackageConfiguration {
 
             String value(){
                 return "";
+            }
+        },
+        switchSession("--published-session-uid"){
+            @Override
+            void flagToString()
+            {
+                System.out.println("\tShow package as of the input published session. If not specified, will show the last published package");
+            }
+
+            @Override
+            void runCommand(String value)
+            {
+                publishedSessionUid = value;
+            }
+
+            @Override
+            String debugString()
+            {
+                return "published session uid: (--published-session-uid)=" + publishedSessionUid;
+            }
+
+            @Override
+            String value()
+            {
+                return " published session uid";
             }
         },;
 

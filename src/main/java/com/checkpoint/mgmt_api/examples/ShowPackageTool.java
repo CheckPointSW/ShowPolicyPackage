@@ -168,8 +168,28 @@ public class ShowPackageTool {
         configuration.getLogger().debug("Chosen server IP: " + loginResponse.getServerIP());
         configuration.getLogger().debug("Login response: " + loginResponse.getPayload());
 
-         /*Update the index page data*/
         IndexView index = new IndexView();
+
+        /*Switching to published session*/
+        if(configuration.getPublishedSessionUid() != null) {
+            ApiResponse res = null;
+            try {
+                res = client.apiCall(loginResponse, "switch-session",
+                                     "{\"uid\" : \""+ configuration.getPublishedSessionUid() +"\"}");
+            }
+            catch (ApiClientException e) {
+                logoutReportAndExit("An error occurred while switching to the published session. Exception: "+ e.getMessage(), MessageType.SEVERE);
+            }
+            if (res == null || !res.isSuccess()) {
+                logoutReportAndExit("Failed to switch published session uid "+ configuration.getPublishedSessionUid() +". " + errorResponseToString(res), MessageType.SEVERE);
+            }
+            index.setPublishedSessionUid(configuration.getPublishedSessionUid());
+        }
+        else{
+            index.setPublishedSessionUid("Last published session");
+        }
+
+         /*Update the index page data*/
         index.setDomain(configuration.getDomain());
 
         /*Show all gateways and servers*/
