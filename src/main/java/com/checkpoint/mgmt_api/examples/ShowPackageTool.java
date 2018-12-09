@@ -934,7 +934,7 @@ public class ShowPackageTool {
                 return false;
             }
 
-            if (checkAndExitInCaseOfError(res, threatLayer, iterations)){
+            if (checkAndExitInCaseOfError(res, threatLayer)){
                 writeRulebase(threatLayer.getName(),packageName,RulebaseType.THREAT, threatLayer.getDomain(),
                         Collections.<Layer>emptySet(), true);
                 return false;
@@ -970,11 +970,10 @@ public class ShowPackageTool {
      *
      * @param res the result that will be checked
      * @param threatLayer the threat layer that the error is checked for
-     * @param iterations the iterations
      *
      * @return True if there was problem showing the rulebase's layer, otherwise False.
      */
-    private static boolean checkAndExitInCaseOfError(ApiResponse res, Layer threatLayer, int iterations){
+    private static boolean checkAndExitInCaseOfError(ApiResponse res, Layer threatLayer){
 
         if (res == null){
             configuration.getLogger().severe("Failed to run show-threat-rulebase command ('"+ threatLayer.getName()+"')");
@@ -994,12 +993,7 @@ public class ShowPackageTool {
             return true;
         }
 
-        boolean noOrEmptyTotal = false;
-        if ( !res.getPayload().containsKey("total") || "0".equals(res.getPayload().get("total").toString()) ) {
-            noOrEmptyTotal = true;
-        }
-
-        return iterations == 0 && noOrEmptyTotal;
+        return false;
     }
 
     /**
