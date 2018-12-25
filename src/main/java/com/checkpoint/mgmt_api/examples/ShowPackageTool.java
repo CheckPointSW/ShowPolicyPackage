@@ -18,10 +18,7 @@
 package com.checkpoint.mgmt_api.examples;
 
 import com.checkpoint.mgmt_api.client.*;
-import com.checkpoint.mgmt_api.objects.GatewayAndServer;
-import com.checkpoint.mgmt_api.objects.IndexView;
-import com.checkpoint.mgmt_api.objects.Layer;
-import com.checkpoint.mgmt_api.objects.PolicyPackage;
+import com.checkpoint.mgmt_api.objects.*;
 import com.checkpoint.mgmt_api.utils.TarGZUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -170,24 +167,7 @@ public class ShowPackageTool {
 
         IndexView index = new IndexView();
 
-        /*Switching to published session*/
-        if(configuration.getPublishedSessionUid() != null) {
-            ApiResponse res = null;
-            try {
-                res = client.apiCall(loginResponse, "switch-session",
-                                     "{\"uid\" : \""+ configuration.getPublishedSessionUid() +"\"}");
-            }
-            catch (ApiClientException e) {
-                logoutReportAndExit("An error occurred while switching to the published session. Exception: "+ e.getMessage(), MessageType.SEVERE);
-            }
-            if (res == null || !res.isSuccess()) {
-                logoutReportAndExit("Failed to switch published session uid "+ configuration.getPublishedSessionUid() +". " + errorResponseToString(res), MessageType.SEVERE);
-            }
-            index.setPublishedSessionUid(configuration.getPublishedSessionUid());
-        }
-        else{
-            index.setPublishedSessionUid("Last published session");
-        }
+        handlePublishedSession(index);
 
          /*Update the index page data*/
         index.setDomain(configuration.getDomain());
@@ -205,6 +185,104 @@ public class ShowPackageTool {
 
         /*Create tar file, free the handlers and deletes temps files */
         logoutReportAndExit("", MessageType.EXIT_WITHOUT_MESSAGE);
+    }
+
+    private static void handlePublishedSession(IndexView index)
+    {
+        Session session = new Session();
+        JSONObject sessionPayload = new JSONObject();
+        ApiResponse sessionRes = null;
+
+        //get last published session
+        try {
+            sessionRes = client.apiCall(loginResponse, "show-last-published-session", "{}");
+        }
+        catch (ApiClientException e) {
+            logoutReportAndExit("Failed to show last published session. Exception: "+ e.getMessage(), MessageType.SEVERE);
+        }
+        if (sessionRes == null || !sessionRes.isSuccess()) {
+            //print error: if client asked to switch session in management with no published sessions
+            if (configuration.getPublishedSessionUid() != null) {
+                logoutReportAndExit(errorResponseToString(
+                        sessionRes) + " - could not switch to the required session: " + configuration.getPublishedSessionUid(),
+                                    MessageType.SEVERE);
+            }
+            //print info: no published sessions in the management
+            else {
+                configuration.getLogger().info(errorResponseToString(sessionRes));
+            }
+        }
+        else {
+            //check if the given id is the last published session and set uid
+            if (configuration.getPublishedSessionUid() != null) {
+                session.setUid(configuration.getPublishedSessionUid());
+
+                if (sessionRes.getPayload().get("uid").toString().equals(configuration.getPublishedSessionUid())) {
+                    session.setLastPublishedSession(true);
+                }
+                else {
+                    session.setLastPublishedSession(false);
+                }
+            }
+            else {
+                session.setUid(sessionRes.getPayload().get("uid").toString());
+                session.setLastPublishedSession(true);
+            }
+
+            //if not the last published session - get the published session
+            if (!session.getLastPublishedSession()) {
+                sessionPayload.put("uid", session.getUid());
+                try {
+                    sessionRes = client.apiCall(loginResponse, "show-session", sessionPayload);
+                }
+                catch (ApiClientException e) {
+                    logoutReportAndExit(
+                            "Failed to show the session" + session.getUid() + ". Exception: " + e.getMessage(),
+                            MessageType.SEVERE);
+                }
+                if (sessionRes == null || !sessionRes.isSuccess()) {
+                    logoutReportAndExit(
+                            "Failed to show the session" + session.getUid() + ". Exception: " + errorResponseToString(
+                                    sessionRes), MessageType.SEVERE);
+                }
+            }
+
+            //get name and published time of the published session
+            Object sessionName = sessionRes.getPayload().get("name");
+            Object publishTime = sessionRes.getPayload().get("publish-time");
+
+            if(sessionName != null)
+                session.setName(sessionName.toString());
+            else
+                session.setName("");
+
+            if(publishTime != null)
+                session.setPublishTime(((HashMap)publishTime).get("iso-8601").toString());
+            else
+                logoutReportAndExit("Input published session is not published - ", MessageType.SEVERE);
+
+            //Switching to published session
+            ApiResponse switchSessionRes = null;
+            if (configuration.getPublishedSessionUid() != null) {
+                sessionPayload.clear();
+                sessionPayload.put("uid", session.getUid());
+                try {
+                    switchSessionRes = client.apiCall(loginResponse, "switch-session", sessionPayload);
+                }
+                catch (ApiClientException e) {
+                    logoutReportAndExit(
+                            "An error occurred while switching to the input published session. Exception: " + e.getMessage(),
+                            MessageType.SEVERE);
+                }
+                if (switchSessionRes == null || !switchSessionRes.isSuccess()) {
+                    logoutReportAndExit(
+                            "Failed to switch published session uid " + configuration.getPublishedSessionUid() + ". " + errorResponseToString(
+                                    switchSessionRes), MessageType.SEVERE);
+                }
+            }
+            index.setSession(session);
+        }
+
     }
 
     /**
