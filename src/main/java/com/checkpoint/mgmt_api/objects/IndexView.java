@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class IndexView
 {
-    private String publishedSessionUid;
+    private Session session;
     private String domain;
     private List<PolicyPackage> policyPackages = new ArrayList<>();
 
@@ -34,14 +34,14 @@ public class IndexView
         return policyPackages;
     }
 
-    public String getPublishedSessionUid()
+    public Session getSession()
     {
-        return publishedSessionUid;
+        return session;
     }
 
-    public void setPublishedSessionUid(String publishedSessionUid)
+    public void setSession(Session session)
     {
-        this.publishedSessionUid = publishedSessionUid;
+        this.session = session;
     }
 
     /**
@@ -54,7 +54,9 @@ public class IndexView
 
         JSONObject jsonIndex = new JSONObject();
 
-        jsonIndex.put("published-session-uid",publishedSessionUid);
+        if(session != null){
+            jsonIndex.put("published-session",session.toJson());
+        }
         jsonIndex.put("domain",domain);
         JSONArray policy = new JSONArray();
         for( PolicyPackage policyPackage : policyPackages){
