@@ -1506,7 +1506,8 @@ public class ShowPackageTool {
             if (fileWriter.getFilePointer() > 1) {
                 fileWriter.writeBytes(",");
             }
-            fileWriter.writeBytes(object.toJSONString());
+            byte[] bytes = object.toJSONString().getBytes("UTF-8");
+            fileWriter.write(bytes);
         }
         catch (IOException e) {
             return false;
