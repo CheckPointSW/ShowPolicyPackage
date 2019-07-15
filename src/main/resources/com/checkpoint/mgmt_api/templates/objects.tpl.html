@@ -123,7 +123,7 @@
                 rowElement.appendChild(indexElement);
 
                 var valueElement = document.createElement("td");
-                printChildElement(elem, valueElement, level);
+                printChildElement(elem, valueElement, level, true);
                 rowElement.appendChild(valueElement);
                 tableElement.appendChild(rowElement);
             });
@@ -133,7 +133,7 @@
         function printObject(obj, parentObject, level) {
 
             if (typeof(obj) !== "object") {
-                parentObject.appendChild(generateValueNode(obj.toString()));
+                parentObject.appendChild(generateValueNode(obj.toString(), false));
                 return;
             }
 
@@ -154,7 +154,7 @@
                 rowElement.appendChild(keyElement);
 
                 var valueElement = document.createElement("td");
-                printChildElement(obj[key], valueElement, level);
+                printChildElement(obj[key], valueElement, level, false);
                 rowElement.appendChild(valueElement);
 
                 tableElement.appendChild(rowElement);
@@ -163,7 +163,7 @@
             parentObject.appendChild(tableElement);
         }
 
-        function printChildElement(elem, parent, level) {
+        function printChildElement(elem, parent, level, isArray) {
             switch (Object.prototype.toString.call((elem))) {
                 case "[object Object]":
                     parent.className = "object_value";
@@ -174,7 +174,7 @@
                     printArray(elem, parent, level + 1);
                     break;
                 default:
-                    parent.appendChild(generateValueNode(elem));
+                    parent.appendChild(generateValueNode(elem, isArray));
             }
         }
 
@@ -240,13 +240,14 @@
             };
         }();
 
-        function generateValueNode(value) {
+        function generateValueNode(value, isArray) {
             var valueNode;
             if (isUUID(value) && objectsMap[value] && getQueryParams()["uid"] !== value) {
                 valueNode = document.createElement("a");
                 valueNode.className = "object_link";
                 valueNode.setAttribute("href", getLinkBase() + value);
                 valueNode.setAttribute("target", "_blank");
+                var child = isArray ? document.createTextNode(objectsMap[value].name) : document.createTextNode(value);
                 valueNode.appendChild(document.createTextNode(value));
             } else {
                 valueNode = document.createTextNode(value)
