@@ -248,7 +248,7 @@
                 valueNode.setAttribute("href", getLinkBase() + value);
                 valueNode.setAttribute("target", "_blank");
                 var child = isArray ? document.createTextNode(objectsMap[value].name) : document.createTextNode(value);
-                valueNode.appendChild(document.createTextNode(value));
+                valueNode.appendChild(child);
             } else {
                 valueNode = document.createTextNode(value)
             }
