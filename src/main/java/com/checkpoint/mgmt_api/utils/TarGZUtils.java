@@ -21,6 +21,7 @@ public class TarGZUtils
                 TarArchiveOutputStream tOut  = new TarArchiveOutputStream(gzOut)
         )
         {
+            tOut.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
             File f = new File(dirPath);
             if (f.isDirectory()) {
                 //pass over all the files in the directory
@@ -34,7 +35,7 @@ public class TarGZUtils
                     deleteTempFolder(dirPath);
                 }
             } else {
-                System.out.println("The given directury path is not a directory");
+                System.out.println("The given directory path is not a directory");
             }
         }
     }
