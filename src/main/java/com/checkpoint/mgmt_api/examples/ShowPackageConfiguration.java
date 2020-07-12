@@ -23,7 +23,7 @@ import java.util.logging.LogRecord;
  * This class holds all the configuration parameters.
  * Responsible for defining the parameters according to the arguments passed from the user.
  */
-enum ShowPackageConfiguration {
+public enum ShowPackageConfiguration {
 
     INSTANCE;
 
@@ -76,6 +76,12 @@ enum ShowPackageConfiguration {
     List<GatewayAndServer> gatewaysWithPolicy    = new ArrayList<>();
     private static Set<String> knownInlineLayers = new HashSet<>();
     private static String publishedSessionUid;
+
+    // Indicates whether to show Access/Threat/NAT policy as part of policy package. Default is true.
+    private static boolean doShowAccessPolicy = true;
+    private static boolean doShowThreatPolicy = true;
+    private static boolean doShowNatPolicy = true;
+
     /*Logger settings*/
 
     private static final MyLogger logger = new MyLogger("MyLog", null);
@@ -523,15 +529,18 @@ enum ShowPackageConfiguration {
 
     public boolean showRulesHitCounts() { return showRulesHitCounts; }
 
-    public Boolean getShowMembership()
-    {
-        return showMembership;
-    }
+    public Boolean getShowMembership() { return showMembership; }
 
     public Boolean getDereferenceGroupMembers()
     {
         return dereferenceGroupMembers;
     }
+
+    public boolean showAccessPolicyFlag() { return doShowAccessPolicy; }
+
+    public boolean showThreatPolicyFlag() { return doShowThreatPolicy; }
+
+    public boolean showNatPolicyFlag() { return doShowNatPolicy; }
 
     /**
      * This enum defines the known flags and the actions each of them does.
@@ -979,7 +988,99 @@ enum ShowPackageConfiguration {
             {
                 return " published session uid";
             }
-        },;
+        },
+        showAccessPolicy("--show-access-policy"){
+            @Override
+            void flagToString()
+            {
+                System.out.println("\tIndicates whether to show access policy as part of policy package. Default value is True.");
+            }
+
+            @Override
+            void runCommand(String value)
+            {
+                if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")) {
+                    final String errorMessage = "The value of --show-access-policy is invalid (must be true or false)";
+                    System.out.println(errorMessage);
+                    throw new IllegalArgumentException(errorMessage);
+                }
+                ShowPackageConfiguration.doShowAccessPolicy = Boolean.parseBoolean(value);
+            }
+
+            @Override
+            String debugString()
+            {
+                return "Show access policy (--show-access-policy)=" + doShowAccessPolicy;
+            }
+
+            @Override
+            String value()
+            {
+                return "  (true|false)";
+            }
+        },
+        showThreatPolicy("--show-threat-policy"){
+            @Override
+            void flagToString()
+            {
+                System.out.println("\tIndicates whether to show threat policy as part of policy package. Default value is True.");
+            }
+
+            @Override
+            void runCommand(String value)
+            {
+                if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")) {
+                    final String errorMessage = "The value of --show-threat-policy is invalid (must be true or false)";
+                    System.out.println(errorMessage);
+                    throw new IllegalArgumentException(errorMessage);
+                }
+
+                ShowPackageConfiguration.doShowThreatPolicy = Boolean.parseBoolean(value);
+            }
+
+            @Override
+            String debugString()
+            {
+                return "Show threat policy (--show-threat-policy)=" + doShowThreatPolicy;
+            }
+
+            @Override
+            String value()
+            {
+                return "  (true|false)";
+            }
+        },
+        showNatPolicy("--show-nat-policy"){
+            @Override
+            void flagToString()
+            {
+                System.out.println("\tIndicates whether to show NAT policy as part of policy package. Default value is True.");
+            }
+
+            @Override
+            void runCommand(String value)
+            {
+                if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")) {
+                    final String errorMessage = "The value of --show-nat-policy is invalid (must be true or false)";
+                    System.out.println(errorMessage);
+                    throw new IllegalArgumentException(errorMessage);
+                }
+                ShowPackageConfiguration.doShowNatPolicy = Boolean.parseBoolean(value);
+            }
+
+            @Override
+            String debugString()
+            {
+                return "Show nat policy (--show-nat-policy)=" + doShowNatPolicy;
+            }
+
+            @Override
+            String value()
+            {
+                return "  (true|false)";
+            }
+        },
+        ;
 
 
         private String flag;

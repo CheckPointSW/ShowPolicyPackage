@@ -1,5 +1,6 @@
 package com.checkpoint.mgmt_api.objects;
 
+import com.checkpoint.mgmt_api.examples.ShowPackageConfiguration;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import java.util.*;
@@ -54,19 +55,27 @@ public class PolicyPackage
 
         jsonObject.put("packageName",packageName);
 
-        JSONArray accessLayersArray = new  JSONArray();
-        for (Layer access : accessLayers){
-            accessLayersArray.add(access.toJson());
+        if(ShowPackageConfiguration.INSTANCE.showAccessPolicyFlag()){
+            JSONArray accessLayersArray = new  JSONArray();
+            for (Layer access : accessLayers){
+                accessLayersArray.add(access.toJson());
+            }
+            jsonObject.put("accessLayers",accessLayersArray);
+        }else{
+            jsonObject.put("accessLayers", Collections.emptyList());
         }
-        jsonObject.put("accessLayers",accessLayersArray);
 
-        JSONArray threatLayersArray = new  JSONArray();
-        for (Layer threat : threatLayers){
-            threatLayersArray.add(threat.toJson());
+        if(ShowPackageConfiguration.INSTANCE.showThreatPolicyFlag()){
+            JSONArray threatLayersArray = new  JSONArray();
+            for (Layer threat : threatLayers){
+                threatLayersArray.add(threat.toJson());
+            }
+            jsonObject.put("threatLayers",threatLayersArray);
+        }else{
+            jsonObject.put("threatLayers", Collections.emptyList());
         }
-        jsonObject.put("threatLayers",threatLayersArray);
 
-        if(natLayer != null) {
+        if(ShowPackageConfiguration.INSTANCE.showNatPolicyFlag()) {
             jsonObject.put("natLayer", natLayer.toJson());
         }
         else {

@@ -51,6 +51,12 @@ This flag is supported from R80.10 Jumbo HF take 70
 • [--query-limit limit] (Optional): The objects query limit. No more than that many results will be returned.  
 Minimum value is 1, maximum value is 500. Default value is 10.
 
+• [--show-access-policy (true|false)] (Optional): Indicates whether to show access policy as part of policy package. Default value is True.
+
+• [--show-threat-policy (true|false)] (Optional): Indicates whether to show threat policy as part of policy package. Default value is True.
+
+• [--show-nat-policy (true|false)] (Optional): Indicates whether to show nat policy as part of policy package. Default value is True.
+
 Use "--version" option to print the version of the tool
 
 Use "-h" option in order to see the full list of options to configure the tool  
