@@ -569,22 +569,29 @@ public class ShowPackageTool {
             configuration.getLogger().debug("Starting to process layers of package '" + packageName + "'");
 
             natLayer = aggregatePackageLayers(packageName, accessLayers, threatLayers);
-            //Handle access layer
-            configuration.getLogger().debug("Handle access layers");
-            for (Layer accessLayer : accessLayers) {
-                showAccessRulebase(accessLayer, packageName);
+
+            if(configuration.showAccessPolicyFlag()){
+                //Handle access layer
+                configuration.getLogger().debug("Handle access layers");
+                for (Layer accessLayer : accessLayers) {
+                    showAccessRulebase(accessLayer, packageName);
+                }
             }
 
-            //Handle nat layer
-            if (natLayer != null) {
-                configuration.getLogger().debug("Handle nat layer");
-                showNatRulebase(natLayer, packageName);
+            if(configuration.showNatPolicyFlag()){
+                //Handle nat layer
+                if (natLayer != null) {
+                    configuration.getLogger().debug("Handle nat layer");
+                    showNatRulebase(natLayer, packageName);
+                }
             }
 
-            //Handle threat layers
-            configuration.getLogger().debug("Handle threat layers");
-            for (Layer threatLayer : threatLayers) {
-                showThreatRulebase(packageName, threatLayer);
+            if(configuration.showThreatPolicyFlag()){
+                //Handle threat layers
+                configuration.getLogger().debug("Handle threat layers");
+                for (Layer threatLayer : threatLayers) {
+                    showThreatRulebase(packageName, threatLayer);
+                }
             }
 
             final Queue<String> objectsQueue = configuration.getNestedObjectsToRetrieve();
