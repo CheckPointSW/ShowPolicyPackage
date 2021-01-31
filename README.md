@@ -20,9 +20,11 @@ To use the tool you have to obtain `web_api_show_package-jar-with-dependencies.j
 
 Then you run:
 
-```java -jar web_api_show_package-jar-with-dependencies.jar [-d domain-name] [-k package-name] [-v] [-c] [-n port-number] [-o path] [--show-membership (true|false)] [--dereference-group-members (true|false)]```
+```java -jar web_api_show_package-jar-with-dependencies.jar [-m mgmt-ip] [-d domain-name] [-k package-name] [-v] [-c] [-n port-number] [-o path] [--show-membership (true|false)] [--dereference-group-members (true|false)]```
       
 Where:
+
+• [-m mgmt-ip] (Optional): Management server ip address. Default value is 127.0.0.1.
 
 • [-d domain-name] (Optional): The name or uid of the Security Management Server domain.  
 When running the command on a Multi domain server the default domain is the "MDS".
