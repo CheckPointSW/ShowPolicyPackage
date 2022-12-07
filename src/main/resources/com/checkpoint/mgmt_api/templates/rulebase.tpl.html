@@ -132,12 +132,12 @@
     </script>
 
     <script>
-        var accessColumnHeaders = ["No.", "Name", "Source", "Destination", "VPN", "Service/Application", getDataHeader(), "Action", "Track", "Time", "Install-On", "Comments"];
+        var accessColumnHeaders = ["No.", "UID", "Name", "Source", "Destination", "VPN", "Service/Application", getDataHeader(), "Action", "Track", "Time", "Install-On", "Comments"];
         if (showHitCount) {
             accessColumnHeaders.splice(1, 0, "Hits");
         }
-        var natColumnHeaders = ["No.", "Original Source", "Original Destination", "Original Services", "Translated Source", "Translated Destination", "Translated Services", "Install-On", "Comments"];
-        var threatColumnHeaders = ["No.", "Name", "Protected Scope", "Source", "Destination", "Protection/Site", "Services", "Action", "Track", "install-On", "Comments"];
+        var natColumnHeaders = ["No.", "UID", "Original Source", "Original Destination", "Original Services", "Translated Source", "Translated Destination", "Translated Services", "Install-On", "Comments"];
+        var threatColumnHeaders = ["No.", "UID", "Name", "Protected Scope", "Source", "Destination", "Protection/Site", "Services", "Action", "Track", "install-On", "Comments"];
 
         var columnHeaders;
 
@@ -314,6 +314,7 @@
             td_number.appendChild(document.createTextNode(ruleObject["rule-number"]));
 
             tr.appendChild(td_number);
+            tr.appendChild(drawTextCell(ruleObject, "uid"));
             tr.appendChild(drawSingleValueCell(ruleObject["original-source"]));
             tr.appendChild(drawSingleValueCell(ruleObject["original-destination"]));
             tr.appendChild(drawSingleValueCell(ruleObject["original-service"]));
@@ -380,6 +381,7 @@
                 tr.appendChild(drawTextCell(ruleObject.hits || {}, "value"));
             }
 
+            tr.appendChild(drawTextCell(ruleObject, "uid"));
             tr.appendChild(drawTextCell(ruleObject, "name"));
             tr.appendChild(drawMultiValueCell(ruleObject["source"], ruleObject["source-negate"]));
             tr.appendChild(drawMultiValueCell(ruleObject["destination"], ruleObject["destination-negate"]));
@@ -407,6 +409,7 @@
             td_number.appendChild(document.createTextNode(ruleObject["rule-number"]));
 
             tr.appendChild(td_number);
+            tr.appendChild(drawTextCell(ruleObject, "uid"));
             tr.appendChild(drawTextCell(ruleObject, "name"));
             tr.appendChild(drawMultiValueCell(ruleObject["protected-scope"], ruleObject["protected-scope-negate"]));
             tr.appendChild(drawMultiValueCell(ruleObject["source"], ruleObject["source-negate"]));
@@ -433,6 +436,7 @@
 
 
             tr.appendChild(td_number);
+            tr.appendChild(drawTextCell(ruleObject, "uid"));
             tr.appendChild(drawTextCell(ruleObject, "name"));
             tr.appendChild(drawMultiValueCell(ruleObject["protected-scope"], ruleObject["protected-scope-negate"]));
             tr.appendChild(drawMultiValueCell(ruleObject["source"], ruleObject["source-negate"]));
