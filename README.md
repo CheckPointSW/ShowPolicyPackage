@@ -31,7 +31,9 @@ When running the command on a Multi domain server the default domain is the "MDS
 
 • [-v] (Optional): List the existing policy packages.
 
-• [-c] (Optional): Retrieve access policy rules hit counts.
+• [-c] (Optional): Retrieve access policy rules' hit count.
+
+• [--show-rule-uid] (Optional): Show each rule's UID.
 
 • [-k package-name] (Optional): The package name or the uid of the policy package to show.  
 When a package-name is not provided, the tool will provide details on all the policy-packages  

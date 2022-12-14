@@ -171,14 +171,15 @@ public enum HtmlUtils {
 
     public void writeRulebaseHTML(String layerName, String packageName, String domain, String apiVersion,
                                   String rulebaseType ,Map<String,String> uidToName,
-                                  Set<Layer> inlineLayers, boolean failedCreatingRulbase) throws IOException {
+                                  Set<Layer> inlineLayers, boolean failedCreatingRulbase, boolean showRuleUid) throws IOException {
 
         //In case of nat set the domain name to be 'Management server'
         if(domain == null || domain.isEmpty()) {
             domain = "Management server";
         }
 
-        String rulebase = "{\"api-version\" : \"" + apiVersion + "\", \"domain\" : \"" + domain + "\", \"package\" : \""
+        String rulebase = "{\"api-version\" : \"" + apiVersion + "\", \"showRuleUid\" : \"" + showRuleUid + "\", " +
+                "\"domain\" : \"" + domain + "\", \"package\" : \""
                 + packageName + "\", " + "\"layer\" : \"" + layerName + "\", \"type\" : \"" + rulebaseType + "\"}";
 
 

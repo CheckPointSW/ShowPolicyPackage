@@ -1229,7 +1229,7 @@ public class ShowPackageTool {
             configuration.getHtmlUtils().writeRulebaseHTML(layerName, packageName, domain, loginResponse.getApiVersion(),
                     rulebaseType.typeToString(),
                     configuration.getUidToName(),
-                    inlineLayers, failedCreatingRulebase);
+                    inlineLayers, failedCreatingRulebase, configuration.showRuleUidFlag());
             configuration.getRulbaseWriter().seek(0);
             configuration.getRulbaseWriter().writeBytes("[");
         }
