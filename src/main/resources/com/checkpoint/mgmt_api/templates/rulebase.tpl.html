@@ -132,14 +132,22 @@
     </script>
 
     <script>
+        var unsupportedNatRuleNameVersions = ["1.6.1", "1.6", "1.5", "1.4", "1.3", "1.2", "1.1", "1"]
         var accessColumnHeaders = ["No.", "Name", "Source", "Destination", "VPN", "Service/Application", getDataHeader(), "Action", "Track", "Time", "Install-On", "Comments"];
         if (showHitCount) {
             accessColumnHeaders.splice(1, 0, "Hits");
         }
         var natColumnHeaders = ["No.", "Original Source", "Original Destination", "Original Services", "Translated Source", "Translated Destination", "Translated Services", "Install-On", "Comments"];
+        if (!unsupportedNatRuleNameVersions.includes(getApiVersion())){
+            natColumnHeaders.splice(1, 0, "Name");
+        }
         var threatColumnHeaders = ["No.", "Name", "Protected Scope", "Source", "Destination", "Protection/Site", "Services", "Action", "Track", "install-On", "Comments"];
 
-        var columnHeaders;
+        if (getShowRuleUid() === "true"){
+            accessColumnHeaders.splice(1, 0, "UID");
+            natColumnHeaders.splice(1, 0, "UID");
+            threatColumnHeaders.splice(1, 0, "UID");
+        }
 
         function getOptionalTextValue(elem, key) {
             if (key in elem) return elem[key];
@@ -304,6 +312,14 @@
             return rulebase["api-version"] != "null" && rulebase["api-version"] != "1";
         }
 
+        function getApiVersion(){
+            return rulebase["api-version"];
+        }
+
+        function getShowRuleUid() {
+            return rulebase["showRuleUid"];
+        }
+
         function drawNatRule(ruleObject) {
             var tr = document.createElement("tr");
             if (!ruleObject.enabled) {
@@ -314,6 +330,12 @@
             td_number.appendChild(document.createTextNode(ruleObject["rule-number"]));
 
             tr.appendChild(td_number);
+            if (natColumnHeaders.includes("UID")){
+                tr.appendChild(drawTextCell(ruleObject, "uid"));
+            }
+            if (natColumnHeaders.includes("Name")){
+                tr.appendChild(drawTextCell(ruleObject, "name"));
+            }
             tr.appendChild(drawSingleValueCell(ruleObject["original-source"]));
             tr.appendChild(drawSingleValueCell(ruleObject["original-destination"]));
             tr.appendChild(drawSingleValueCell(ruleObject["original-service"]));
@@ -375,7 +397,9 @@
                 td_data.appendChild(document.createTextNode(dataDirectionText));
             }
             tr.appendChild(td_number);
-
+            if (accessColumnHeaders.includes("UID")){
+                tr.appendChild(drawTextCell(ruleObject, "uid"));
+            }
             if (showHitCount) {
                 tr.appendChild(drawTextCell(ruleObject.hits || {}, "value"));
             }
@@ -407,6 +431,9 @@
             td_number.appendChild(document.createTextNode(ruleObject["rule-number"]));
 
             tr.appendChild(td_number);
+            if (threatColumnHeaders.includes("UID")){
+                tr.appendChild(drawTextCell(ruleObject, "uid"));
+            }
             tr.appendChild(drawTextCell(ruleObject, "name"));
             tr.appendChild(drawMultiValueCell(ruleObject["protected-scope"], ruleObject["protected-scope-negate"]));
             tr.appendChild(drawMultiValueCell(ruleObject["source"], ruleObject["source-negate"]));

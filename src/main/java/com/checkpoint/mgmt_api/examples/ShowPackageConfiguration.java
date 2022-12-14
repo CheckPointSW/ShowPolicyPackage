@@ -27,7 +27,7 @@ public enum ShowPackageConfiguration {
 
     INSTANCE;
 
-    private static final String TOOL_VERSION     = "v2.0.6";
+    private static final String TOOL_VERSION     = "v2.1.0";
     private static final String TAR_SUFFIX       = ".tar.gz";
     private static final String LOG_SUFFIX       = ".elg";
     private static final String PREFIX           = "show_package-";
@@ -96,6 +96,8 @@ public enum ShowPackageConfiguration {
     private static String proxy             = "";
     private HtmlUtils htmlUtil              = HtmlUtils.INSTANCE;
     private static RandomAccessFile objectsWriter;
+
+    private static boolean showEachRulesUid = false;
 
     private static RandomAccessFile rulbaseWriter;
     void initializeParameters(String[] args) throws Exception{
@@ -214,7 +216,7 @@ public enum ShowPackageConfiguration {
                 if(option.equals(Options.listOfPackages) || option.equals(Options.help)
                         || option.equals(Options.debugInfo) || option.equals(Options.unsafeState)
                         || option.equals(Options.showHitCounts) || option.equals(Options.deleteTempFiles)
-                        || option.equals(Options.version)){
+                        || option.equals(Options.version) || option.equals(Options.showRuleUid)){
                     //Options that don't require a value after the flag
                     option.runCommand("");
                     i++;
@@ -542,6 +544,8 @@ public enum ShowPackageConfiguration {
 
     public boolean showNatPolicyFlag() { return doShowNatPolicy; }
 
+    public boolean showRuleUidFlag() { return showEachRulesUid; }
+
     /**
      * This enum defines the known flags and the actions each of them does.
      */
@@ -784,6 +788,26 @@ public enum ShowPackageConfiguration {
             String debugString()
             {
                 return "showRulesHitCounts:(-c)=" + showRulesHitCounts;
+            }
+        },
+        showRuleUid("--show-rule-uid") {
+            void runCommand(String value)
+            {
+                showEachRulesUid = true;
+            }
+
+            String value(){
+                return "";
+            }
+
+            void flagToString()
+            {
+                System.out.println("\tShow Each rule's UID.\n\tDefault {false}");
+            }
+
+            String debugString()
+            {
+                return "showEachRulesUid:(--show-rule-uid)=" + showEachRulesUid;
             }
         },
         queryLimit("--query-limit") {
