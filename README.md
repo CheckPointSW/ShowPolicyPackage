@@ -20,7 +20,7 @@ To use the tool you have to obtain `web_api_show_package-jar-with-dependencies.j
 
 Then you run:
 
-```java -jar web_api_show_package-jar-with-dependencies.jar [-m server-ip] [-d domain-name] [-k package-name] [-v] [-c] [-n port-number] [-o path] [--show-membership (true|false)] [--dereference-group-members (true|false)]```
+```java -jar web_api_show_package-jar-with-dependencies.jar [-m server-ip] [-d domain-name] [-k package-name] [-v] [-c] [--show-rule-uid] [-n port-number] [-o path] [--show-membership (true|false)] [--dereference-group-members (true|false)]```
       
 Where:
 
