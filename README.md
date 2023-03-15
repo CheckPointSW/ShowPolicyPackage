@@ -26,6 +26,14 @@ Where:
 
 • [-m server-ip] (Optional): Management server ip address. Default value is 127.0.0.1.
 
+• [-u username] (Optional): Management administrator user name.
+
+• [-p password] (Optional): Management administrator password.
+
+• [--api-key] (Optional): Management administrator API key.
+
+• [--cloud-mgmt-id] (Optional): Smart-1 Cloud management UID.
+
 • [-d domain-name] (Optional): The name or uid of the Security Management Server domain.  
 When running the command on a Multi domain server the default domain is the "MDS".
 

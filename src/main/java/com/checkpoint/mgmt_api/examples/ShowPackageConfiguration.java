@@ -36,6 +36,7 @@ public enum ShowPackageConfiguration {
     private static final String RULEBASE_FILE    = "rulebase.txt";
     /*Management server IP address*/
     private static String server                 = ApiClient.LOCAL_SERVER_IP;
+    private static String cloudMgmtId            = null;
 
     /*Set the names of the tar and log files*/
     private static final String tarName;
@@ -51,6 +52,7 @@ public enum ShowPackageConfiguration {
     /*Login credentials*/
     private static String username;
     private static String password;
+    private static String apiKey;
     private static String domain;
     private static int port;
     private static boolean userEnteredPort = false;
@@ -293,19 +295,23 @@ public enum ShowPackageConfiguration {
         JSONObject payload = new JSONObject();
         String missing_arg;
         if (!loginAsRoot) {
-            if (username != null && !username.isEmpty()) {
-                payload.put("user", username);
-            }
-            else{
-                String userName = readUserName();
-                payload.put("user", userName);
-            }
-            if (password != null && !password.isEmpty()) {
-                payload.put("password", password);
-            }
-            else{
-                char[] passwordFromConsole = readPassword();
-                payload.put("password", new String(passwordFromConsole));
+            if(apiKey != null && !apiKey.isEmpty()){
+                payload.put("api-key", apiKey);
+            }else{
+                if (username != null && !username.isEmpty()) {
+                    payload.put("user", username);
+                }
+                else{
+                    String userName = readUserName();
+                    payload.put("user", userName);
+                }
+                if (password != null && !password.isEmpty()) {
+                    payload.put("password", password);
+                }
+                else{
+                    char[] passwordFromConsole = readPassword();
+                    payload.put("password", new String(passwordFromConsole));
+                }
             }
         }
         if(domain != null && !domain.isEmpty()){
@@ -546,6 +552,10 @@ public enum ShowPackageConfiguration {
 
     public boolean showRuleUidFlag() { return showEachRulesUid; }
 
+    public String getApiKey() { return apiKey; }
+
+    public String getCloudMgmtId() { return cloudMgmtId; }
+
     /**
      * This enum defines the known flags and the actions each of them does.
      */
@@ -651,6 +661,43 @@ public enum ShowPackageConfiguration {
             String debugString()
             {
                 return "password:(-p)=*****";
+            }
+        },
+        adminApiKey("--api-key") {
+            void runCommand(String value)
+            {
+                apiKey = value;
+            }
+
+            void flagToString()
+            {
+                System.out.println("\tManagement administrator API key.");
+            }
+
+            String value(){
+                return " API key";
+            }
+
+            String debugString()
+            {
+                return "API key:(--api-key)=*****";
+            }
+        },
+        mgmtCloudId("--cloud-mgmt-id") {
+            void runCommand(String value) { cloudMgmtId = value; }
+
+            void flagToString()
+            {
+                System.out.println("\tSmart-1 Cloud management UID.");
+            }
+
+            String value(){
+                return " Smart-1 Cloud management UID";
+            }
+
+            String debugString()
+            {
+                return "Smart-1 Cloud management UID:(--cloud-mgmt-id)=" + cloudMgmtId;
             }
         },
         domainName("-d") {

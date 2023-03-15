@@ -138,7 +138,7 @@ public class ShowPackageTool {
         /*Login to the Check Point Management server*/
         if (!loginAsRoot) {
             try {
-                loginResponse = client.login(configuration.getServer(), configuration.createPayloadForLogin(false));
+                loginResponse = client.login(configuration.getServer(), configuration.createPayloadForLogin(false), configuration.getCloudMgmtId());
             }
             catch (ApiClientException e) {
                 logoutReportAndExit("An error occurred while logging in to the server. Exception: "+ e.getMessage(), MessageType.SEVERE);
@@ -292,7 +292,7 @@ public class ShowPackageTool {
     private static boolean isLoginAsRoot(){
 
         /*Check if the user entered use name and password*/
-        if (configuration.getUsername() != null && configuration.getPassword() != null){
+        if (configuration.getUsername() != null && configuration.getPassword() != null && configuration.getApiKey() != null){
             return false;
         }
 
