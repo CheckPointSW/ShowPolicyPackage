@@ -75,7 +75,7 @@ public class PolicyPackage
             jsonObject.put("threatLayers", Collections.emptyList());
         }
 
-        if(ShowPackageConfiguration.INSTANCE.showNatPolicyFlag()) {
+        if(ShowPackageConfiguration.INSTANCE.showNatPolicyFlag() && natLayer != null) {
             jsonObject.put("natLayer", natLayer.toJson());
         }
         else {
