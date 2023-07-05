@@ -87,6 +87,7 @@ Use "-h" option in order to see the full list of options to configure the tool
 `java -jar web_api_show_package-jar-with-dependencies.jar -m 198.51.100.5 -v`
 
 • Running the tool on a side server to export the policy packages from Smart-1 Cloud over proxy server 192.168.10.10 port 3128:
+
 `java -jar web_api_show_package-jar-with-dependencies.jar -m MyTenant.maas.checkpoint.com --cloud-mgmt-id <UUID> --api-key <API_KEY> -x 192.168.10.10:3128`
 
 ## Build Instructions
