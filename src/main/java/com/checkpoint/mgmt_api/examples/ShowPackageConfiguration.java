@@ -27,7 +27,7 @@ public enum ShowPackageConfiguration {
 
     INSTANCE;
 
-    private static final String TOOL_VERSION     = "v2.2.0";
+    private static final String TOOL_VERSION     = "v2.3.0";
     private static final String TAR_SUFFIX       = ".tar.gz";
     private static final String LOG_SUFFIX       = ".elg";
     private static final String PREFIX           = "show_package-";
@@ -83,6 +83,7 @@ public enum ShowPackageConfiguration {
     private static boolean doShowAccessPolicy = true;
     private static boolean doShowThreatPolicy = true;
     private static boolean doShowNatPolicy = true;
+    private static boolean doShowHttpsPolicy = false;
 
     /*Logger settings*/
 
@@ -549,6 +550,8 @@ public enum ShowPackageConfiguration {
     public boolean showThreatPolicyFlag() { return doShowThreatPolicy; }
 
     public boolean showNatPolicyFlag() { return doShowNatPolicy; }
+
+    public boolean showHttpsPolicyFlag() { return doShowHttpsPolicy; }
 
     public boolean showRuleUidFlag() { return showEachRulesUid; }
 
@@ -1143,6 +1146,37 @@ public enum ShowPackageConfiguration {
             String debugString()
             {
                 return "Show nat policy (--show-nat-policy)=" + doShowNatPolicy;
+            }
+
+            @Override
+            String value()
+            {
+                return "  (true|false)";
+            }
+        },
+        showHttpsPolicy("--show-https-policy"){
+            @Override
+            void flagToString()
+            {
+                System.out.println("\tIndicates whether to show HTTPS policy as part of policy package. Default value is True.");
+            }
+
+            @Override
+            void runCommand(String value)
+            {
+                if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")) {
+                    final String errorMessage = "The value of --show-https-policy is invalid (must be true or false)";
+                    System.out.println(errorMessage);
+                    throw new IllegalArgumentException(errorMessage);
+                }
+
+                ShowPackageConfiguration.doShowHttpsPolicy = Boolean.parseBoolean(value);
+            }
+
+            @Override
+            String debugString()
+            {
+                return "Show nat policy (--show-https-policy)=" + doShowHttpsPolicy;
             }
 
             @Override
