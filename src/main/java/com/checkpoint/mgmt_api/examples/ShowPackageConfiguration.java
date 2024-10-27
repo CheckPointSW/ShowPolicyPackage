@@ -79,11 +79,11 @@ public enum ShowPackageConfiguration {
     private static Set<String> knownInlineLayers = new HashSet<>();
     private static String publishedSessionUid;
 
-    // Indicates whether to show Access/Threat/NAT policy as part of policy package. Default is true.
+    // Indicates whether to show Access/Threat/NAT/HTTPS policy as part of policy package. Default is true.
     private static boolean doShowAccessPolicy = true;
     private static boolean doShowThreatPolicy = true;
     private static boolean doShowNatPolicy = true;
-    private static boolean doShowHttpsPolicy = false;
+    private static boolean doShowHttpsPolicy = true;
 
     /*Logger settings*/
 
@@ -1176,7 +1176,7 @@ public enum ShowPackageConfiguration {
             @Override
             String debugString()
             {
-                return "Show nat policy (--show-https-policy)=" + doShowHttpsPolicy;
+                return "Show https policy (--show-https-policy)=" + doShowHttpsPolicy;
             }
 
             @Override
