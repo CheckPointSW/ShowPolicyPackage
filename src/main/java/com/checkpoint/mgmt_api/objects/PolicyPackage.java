@@ -14,6 +14,7 @@ public class PolicyPackage
     private String        packageName;
     private List<Layer>   accessLayers;
     private List<Layer>   threatLayers;
+    private List<Layer>   httpsLayers;
     private Layer         natLayer;
     private ObjectsInUse  objects;
 
@@ -23,13 +24,14 @@ public class PolicyPackage
     //The name of the html page of the gateway objects
     private String htmlGatewaysFileName;
 
-    public PolicyPackage(String name, List<Layer> access, List<Layer> threat, Layer nat ,
+    public PolicyPackage(String name, List<Layer> access, List<Layer> threat, Layer nat , List<Layer> https,
                          JSONObject allTypes) {
 
         packageName          = name;
         accessLayers         = access;
         threatLayers         = threat;
         natLayer             = nat;
+        httpsLayers          = https;
         objects              = new ObjectsInUse(name, allTypes);
         gatewayAndServer     = new HashMap<>();
         htmlGatewaysFileName = packageName+"_gateway_objects.html";
@@ -80,6 +82,16 @@ public class PolicyPackage
         }
         else {
             jsonObject.put("natLayer", Collections.emptyList());
+        }
+
+        if(ShowPackageConfiguration.INSTANCE.showHttpsPolicyFlag()){
+            JSONArray httpsLayersArray = new  JSONArray();
+            for (Layer https : httpsLayers){
+                httpsLayersArray.add(https.toJson());
+            }
+            jsonObject.put("httpsLayers",httpsLayersArray);
+        }else{
+            jsonObject.put("httpsLayers", Collections.emptyList());
         }
 
         jsonObject.put("objects",objects.toJson());

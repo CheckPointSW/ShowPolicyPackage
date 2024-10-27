@@ -143,10 +143,13 @@
         }
         var threatColumnHeaders = ["No.", "Name", "Protected Scope", "Source", "Destination", "Protection/Site", "Services", "Action", "Track", "install-On", "Comments"];
 
+        var httpsColumnHeaders = ["No.", "Name", "Source", "Destination", "Services", "Category/Custom Application", "Action", "Track", "Blade", "install-On", "Certificate", "Comments"]
+
         if (getShowRuleUid() === "true"){
             accessColumnHeaders.splice(1, 0, "UID");
             natColumnHeaders.splice(1, 0, "UID");
             threatColumnHeaders.splice(1, 0, "UID");
+            httpsColumnHeaders.splice(1, 0, "UID");
         }
 
         function getOptionalTextValue(elem, key) {
@@ -473,6 +476,34 @@
             return tr;
         }
 
+        function drawHttpsRule(ruleObject) {
+            var tr = document.createElement("tr");
+            if (!ruleObject.enabled) {
+                tr.className = "disabled_rule";
+            }
+            var td_number = document.createElement("td");
+            td_number.className = "rule_number";
+            td_number.appendChild(document.createTextNode(ruleObject["rule-number"]));
+
+            tr.appendChild(td_number);
+            if (httpsColumnHeaders.includes("UID")){
+                tr.appendChild(drawTextCell(ruleObject, "uid"));
+            }
+            tr.appendChild(drawTextCell(ruleObject, "name"));
+
+            tr.appendChild(drawMultiValueCell(ruleObject["source"], ruleObject["source-negate"]));
+            tr.appendChild(drawMultiValueCell(ruleObject["destination"], ruleObject["destination-negate"]));
+            tr.appendChild(drawMultiValueCell(ruleObject["service"], ruleObject["service-negate"]));
+            tr.appendChild(drawMultiValueCell(ruleObject["site-category"], ruleObject["site-category-negate"]));
+            tr.appendChild(drawSingleValueCell(ruleObject["action"]));
+            tr.appendChild(drawSingleValueCell(ruleObject["track"]));
+            tr.appendChild(drawSingleValueCell(ruleObject["blade"]));
+            tr.appendChild(drawMultiValueCell(ruleObject["install-on"], false));
+            tr.appendChild(drawSingleValueCell(ruleObject["certificate"]));
+            tr.appendChild(drawTextCell(ruleObject, "comments"));
+            return tr;
+        }
+
         function drawRulebaseColumnHeaders(columns) {
 
             var headerRow = document.getElementById("rulebase_header_row");
@@ -504,6 +535,10 @@
                     document.title = "NAT";
                 }
                 if (rulebase.type == "threat-prevention") {
+                    document.getElementById("layer").innerHTML = "Layer: " + rulebase.layer + " (" + rulebase.type + " layer)";
+                    document.title = rulebase.layer;
+                }
+                if (rulebase.type == "https") {
                     document.getElementById("layer").innerHTML = "Layer: " + rulebase.layer + " (" + rulebase.type + " layer)";
                     document.title = rulebase.layer;
                 }
@@ -601,6 +636,36 @@
 
                         if (entry.type == "threat-exception") {
                             tableBody.appendChild(drawThreatException(entry, lastRuleNumber, lastRuleEnabled));
+                        }
+
+                        if (entry.type == "place-holder") {
+                            tableBody.appendChild(drawPlaceholder(entry));
+                        }
+                    });
+                }
+
+
+                if (rulebase.type == "https") {
+                    document.getElementById("layer").innerHTML = "Layer: " + rulebase.layer + " (" + rulebase.type + " layer)";
+                    document.title = rulebase.layer;
+
+                    drawRulebaseColumnHeaders(httpsColumnHeaders);
+                    // create rules and sections
+                    var tableBody = document.getElementById("rulebase_table_body");
+                    if (data.length == 0) {
+                        var message = document.getElementById("message");
+                        message.className = "empty";
+                        message.innerText = "No rules found in this layer.";
+                    }
+                    data.forEach(function (entry) {
+                        if (entry.type == "https-section") {
+                            tableBody.appendChild(drawSection(entry, accessColumnHeaders, ""));
+                        }
+
+                        if (entry.type == "https-rule") {
+                            tableBody.appendChild(drawHttpsRule(entry));
+                            lastRuleNumber = entry["rule-number"];
+                            lastRuleEnabled = entry["enabled"];
                         }
 
                         if (entry.type == "place-holder") {

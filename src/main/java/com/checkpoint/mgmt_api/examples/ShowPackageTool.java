@@ -63,6 +63,7 @@ public class ShowPackageTool {
     private static String[] accessTypes = {"access-section", "access-rule", "place-holder"};
     private static String[] natTypes    = {"nat-section", "nat-rule", "place-holder"};
     private static String[] threatTypes = {"threat-section", "threat-exception", "place-holder"};
+    private static String[] httpsTypes    = {"https-section", "https-rule", "place-holder"};
 
     // Object fields that contains nested objects
     private static final String[] OBJECT_FIELDS_CONTAINING_NESTED_OBJECTS = {"except", "include", "location"};
@@ -72,7 +73,8 @@ public class ShowPackageTool {
 
         ACCESS ("access"),
         NAT ("nat"),
-        THREAT ("threat-prevention");
+        THREAT ("threat-prevention"),
+        HTTPS ("https");
 
         private final String name;
 
@@ -559,6 +561,7 @@ public class ShowPackageTool {
         List<Layer> accessLayers = new ArrayList<>();
         List<Layer> threatLayers = new ArrayList<>();
         Layer natLayer;
+        List<Layer> httpsLayers = new ArrayList<>();
         PolicyPackage policyPackage = null;
         try {
             //The vpn communities which were collected are common to all of the policy packages.
@@ -568,7 +571,7 @@ public class ShowPackageTool {
             //Fill the layer and the layer's list with information about the package's layers.
             configuration.getLogger().debug("Starting to process layers of package '" + packageName + "'");
 
-            natLayer = aggregatePackageLayers(packageName, accessLayers, threatLayers);
+            natLayer = aggregatePackageLayers(packageName, accessLayers, threatLayers, httpsLayers);
 
             if(configuration.showAccessPolicyFlag()){
                 //Handle access layer
@@ -591,6 +594,14 @@ public class ShowPackageTool {
                 configuration.getLogger().debug("Handle threat layers");
                 for (Layer threatLayer : threatLayers) {
                     showThreatRulebase(packageName, threatLayer);
+                }
+            }
+
+            if(configuration.showHttpsPolicyFlag()){
+                //Handle https layers
+                configuration.getLogger().debug("Handle https layers");
+                for (Layer httpsLayer : httpsLayers) {
+                    showHttpsRulebase(httpsLayer, packageName);
                 }
             }
 
@@ -643,7 +654,7 @@ public class ShowPackageTool {
             writeDictionary(packageName);
 
             //Create a policy package
-            policyPackage = new PolicyPackage(packageName, accessLayers, threatLayers, natLayer, allTypes);
+            policyPackage = new PolicyPackage(packageName, accessLayers, threatLayers, natLayer, httpsLayers, allTypes);
 
             //Handle gateways that the policy is install on
             JSONArray gatewayObjects = new JSONArray();
@@ -686,7 +697,7 @@ public class ShowPackageTool {
      * @return natLayer nat layer that the function sets
      */
     private static Layer aggregatePackageLayers(String packageName, List<Layer> accessLayers,
-                                                List<Layer> threatLayers){
+                                                List<Layer> threatLayers, List<Layer> httpsLayers){
         ApiResponse res  = null;
         Layer natLayer = null;
         try {
@@ -720,6 +731,26 @@ public class ShowPackageTool {
                 JSONArray jsonArray = (JSONArray) response.get("threat-layers");
                 configuration.getLogger().debug("Found " + jsonArray.size() + " threat layer(s) in package: '" + packageName + "'");
                 buildLayers(jsonArray, loggerInfo, threatLayers);
+            }
+
+            if ("true".equalsIgnoreCase(response.get("https-inspection-policy").toString())) {
+                //Https layers
+                StringBuilder loggerInfo = new StringBuilder();
+                loggerInfo.append("Https layer(s) that were found in package '").append(packageName).append("' are: ");
+                JSONArray jsonArray = new JSONArray();
+                JSONObject layers = (JSONObject) response.get("https-inspection-layers");
+                if (layers != null){
+                    JSONObject inboundLayer = (JSONObject) layers.get("inbound-https-layer");
+                    JSONObject outboundLayer = (JSONObject) layers.get("outbound-https-layer");
+                    jsonArray.add(inboundLayer);
+                    jsonArray.add(outboundLayer);
+                }
+                else {
+                    jsonArray.add(response.get("https-inspection-layer"));
+                }
+
+                configuration.getLogger().debug("Found " + jsonArray.size() + " https layer(s) in package: '" + packageName + "'");
+                buildLayers(jsonArray, loggerInfo, httpsLayers);
             }
 
             if ("true".equalsIgnoreCase(response.get("nat-policy").toString())) {
@@ -805,6 +836,30 @@ public class ShowPackageTool {
 
         configuration.getLogger().debug("Run command: 'show-nat-rulebase' with payload: " + payload.toJSONString());
         return showRulebase( natLayer, packageName, "show-nat-rulebase", RulebaseType.NAT, payload, natTypes);
+
+    }
+
+    /**
+     * This function creates a payload in order to create a html page of a given https layer.
+     *
+     * @param httpsLayer the https {@link Layer} that the html page will be created for
+     * @param packageName the package name that the layer belongs to
+     *
+     * @return True (False in case of an error).
+     */
+    private static boolean showHttpsRulebase(Layer httpsLayer, String packageName) {
+
+        JSONObject payload = new JSONObject();
+        configuration.getLogger().info("Starting handling https layer: ");
+
+        payload.put("uid", httpsLayer.getUid());
+        payload.put("details-level", "full");
+        payload.put("use-object-dictionary", true);
+
+        addNewFlagsToControlDetailsLevel(payload);
+
+        configuration.getLogger().debug("Run command: 'show-https-rulebase' with payload: " + payload.toJSONString());
+        return showRulebase( httpsLayer, packageName, "show-https-rulebase", RulebaseType.HTTPS, payload, httpsTypes);
 
     }
 
