@@ -69,7 +69,7 @@ Minimum value is 1, maximum value is 500. Default value is 10.
 
 • [--show-nat-policy (true|false)] (Optional): Indicates whether to show nat policy as part of policy package. Default value is True.
 
-• [--show-https-policy (true|false)] (Optional): Indicates whether to show https policy as part of policy package. Default value is False.
+• [--show-https-policy (true|false)] (Optional): Indicates whether to show https policy as part of policy package. Default value is True.
 
 Use "--version" option to print the version of the tool
 
