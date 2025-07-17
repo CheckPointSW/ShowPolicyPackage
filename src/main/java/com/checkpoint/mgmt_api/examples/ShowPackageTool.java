@@ -22,6 +22,7 @@ import com.checkpoint.mgmt_api.objects.*;
 import com.checkpoint.mgmt_api.utils.TarGZUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import com.checkpoint.mgmt_api.utils.FileNameUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -765,7 +766,8 @@ public class ShowPackageTool {
                 }
                 configuration.getLogger().debug("Found nat layer in package: '" + packageName + "'");
                 natLayer.setDomainType(domain.get("domain-type").toString());
-                natLayer.setHtmlFileName(packageName + " " + natLayer.getName() + "-" + natLayer.getDomain() + ".html");
+                String baseFileName = packageName + " " + natLayer.getName() + "-" + natLayer.getDomain();
+                natLayer.setHtmlFileName(FileNameUtils.sanitizeFileName(baseFileName) + ".html");
             }
         }
         return natLayer;
@@ -1338,7 +1340,8 @@ public class ShowPackageTool {
             layer.setDomain("Management server");
         }
         layer.setDomainType(((JSONObject) layerInfo.get("domain")).get("domain-type").toString());
-        layer.setHtmlFileName(layer.getName() + "-" + layer.getDomain() + ".html");
+        String baseFileName = layer.getName() + "-" + layer.getDomain();
+        layer.setHtmlFileName(FileNameUtils.sanitizeFileName(baseFileName) + ".html");
 
         return layer;
     }

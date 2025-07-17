@@ -182,9 +182,12 @@ public enum HtmlUtils {
                 "\"domain\" : \"" + domain + "\", \"package\" : \""
                 + packageName + "\", " + "\"layer\" : \"" + layerName + "\", \"type\" : \"" + rulebaseType + "\"}";
 
+        // Sanitize filenames to prevent "File name too long" errors
+        String baseFileName = layerName + "-" + domain;
+        String sanitizedBaseFileName = FileNameUtils.sanitizeFileName(baseFileName);
 
-        String htmlFileName = resultFolderPath +layerName + "-" + domain + HTML_SUFFIX;
-        String jsonFileName = resultFolderPath +layerName + "-" + domain + JSON_SUFFIX;
+        String htmlFileName = resultFolderPath + sanitizedBaseFileName + HTML_SUFFIX;
+        String jsonFileName = resultFolderPath + sanitizedBaseFileName + JSON_SUFFIX;
         String objectsFile =  resultFolderPath + RULEBASE_FILE;
         FileDetails details = new FileDetails(objectsFile,getRulebaseHtmlTemplateLines(),htmlFileName, jsonFileName,
                                               uidToName, new RulebaseData(rulebase, inlineLayers, failedCreatingRulbase));
@@ -293,13 +296,14 @@ public enum HtmlUtils {
      * @throws FileNotFoundException
      * @throws UnsupportedEncodingException
      */
-   public void writeObjectsHTML(String packageName) throws IOException
-   {
-       String objectsFile = resultFolderPath + OBJECTS_FILE;
-       String htmlFileName = resultFolderPath + packageName + "_objects" + HTML_SUFFIX;
-       String jsonFileName = resultFolderPath + packageName + "_objects" + JSON_SUFFIX;
-       FileDetails details = new FileDetails(objectsFile, getObjectsHtmlTemplateLines(), htmlFileName, jsonFileName);
-       createHtmlFile(details, FileType.OBJECTS);
+    public void writeObjectsHTML(String packageName) throws IOException
+    {
+        String objectsFile = resultFolderPath + OBJECTS_FILE;
+        String sanitizedPackageName = FileNameUtils.sanitizeFileName(packageName + "_objects");
+        String htmlFileName = resultFolderPath + sanitizedPackageName + HTML_SUFFIX;
+        String jsonFileName = resultFolderPath + sanitizedPackageName + JSON_SUFFIX;
+        FileDetails details = new FileDetails(objectsFile, getObjectsHtmlTemplateLines(), htmlFileName, jsonFileName);
+        createHtmlFile(details, FileType.OBJECTS);
     }
 
     /**
@@ -313,7 +317,7 @@ public enum HtmlUtils {
      */
     public boolean writeGatewaysHTML(String packageName, String objectsAsJsonString ) throws IOException
     {
-        String pageName = packageName +"_gateway_objects";
+        String pageName = FileNameUtils.sanitizeFileName(packageName + "_gateway_objects");
         return writeToHtmlPage(pageName, objectsAsJsonString, getObjectsHtmlTemplateLines());
     }
 
