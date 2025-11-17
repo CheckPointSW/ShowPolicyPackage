@@ -46,7 +46,7 @@ public class ShowPackageTool {
         final String HTTPS_PROTOCOLS_PROPERTY = "https.protocols";
 
         if (System.getProperty(HTTPS_PROTOCOLS_PROPERTY) == null) {
-            System.setProperty(HTTPS_PROTOCOLS_PROPERTY, "TLSv1,TLSv1.1,TLSv1.2");
+            System.setProperty(HTTPS_PROTOCOLS_PROPERTY, "TLSv1,TLSv1.1,TLSv1.2,TLSv1.3");
         }
     }
 
@@ -113,6 +113,12 @@ public class ShowPackageTool {
         String proxy = configuration.getProxy();
         if(proxy != null && !proxy.isEmpty()){
             apiClientArgs.setProxySetting(proxy);
+        }
+
+        /*If the user asked for a certain tls version, then set the tls version to a given one*/
+        String TlsVersion = configuration.getTlsVersion();
+        if(TlsVersion != null && !TlsVersion.isEmpty()){
+            apiClientArgs.setTlsVersion(TlsVersion);
         }
 
         /*If the user asked for a certain port, then set the port to a given port*/
