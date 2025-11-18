@@ -91,6 +91,8 @@ public enum ShowPackageConfiguration {
     private FileHandler fileHandler;
     /*Paths settings*/
 
+    private static String tlsVersion = "TLSv1.2";
+
     private static String tarGzPath          = tarName;
     private static String resultFolderPath;
     //Define if the function needs only to show the existing packages
@@ -103,6 +105,20 @@ public enum ShowPackageConfiguration {
     private static boolean showEachRulesUid = false;
 
     private static RandomAccessFile rulbaseWriter;
+
+
+    public static String getTlsVersion() {
+        return tlsVersion;
+    }
+
+    public static void setTlsVersion(String tlsVersion) {
+        if(tlsVersion==null)
+            ShowPackageConfiguration.tlsVersion = "TLSv1.2";
+        else {
+            ShowPackageConfiguration.tlsVersion = tlsVersion;
+        }
+    }
+
     void initializeParameters(String[] args) throws Exception{
 
         //Default debug level
@@ -739,6 +755,17 @@ public enum ShowPackageConfiguration {
 
             String value(){
                 return "";
+            }
+        },
+        tlsVersions("-tls") {
+            void runCommand(String value) { tlsVersion = value;}
+            void flagToString() { System.out.println("\tTLS Version. \n\tDefault value is TLSv1.2");}
+            String debugString()
+            {
+                return "tlsVersions:(-tls)=" + tlsVersion;
+            }
+            String value(){
+                return " tls-version";
             }
         },
         deleteTempFiles("-r") {

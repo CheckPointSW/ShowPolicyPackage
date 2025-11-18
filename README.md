@@ -50,6 +50,9 @@ that are being used (the ones that were installed on the security gateways).
 • [-n port-number] (Optional): The port of WebAPI server on Security Management Server.  
 Default value is 443.
 
+• [-tls tls-version] (Optional): The TLS protocol version used to connect to the Management server.
+Default value is 'TLSv1.2'.(e.g. -tls TLSv1.3)
+
 • [-o path] (Optional): The output path. The location in which to save the resulting .tar.gz file.  
 The parameter can also be the full path (including the .tar.gz filename).   
 The default is the current directory.  
